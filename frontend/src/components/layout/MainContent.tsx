@@ -50,6 +50,11 @@ export default function MainContent({ activeModule, analysisData }: MainContentP
 
       {activeModule === 'spectrum' && (
         <ErrorBoundary moduleName="频谱分析">
+          {(() => {
+            console.log('Spectrum data:', analysisData.spectrum)
+            console.log('Spectrum.spectrum:', analysisData.spectrum?.spectrum)
+            return null
+          })()}
           <div className="flex flex-col gap-5">
             <SpectrumAnalyzer spectrum={analysisData.spectrum.spectrum} />
             <SpectrogramHeatmap spectrogram={analysisData.spectrum.spectrogram} />

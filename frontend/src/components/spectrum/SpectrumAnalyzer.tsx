@@ -6,6 +6,13 @@ interface SpectrumAnalyzerProps {
 }
 
 export default function SpectrumAnalyzer({ spectrum }: SpectrumAnalyzerProps) {
+  if (!spectrum || !spectrum.frequencies || !spectrum.magnitude_db) {
+    console.error('SpectrumAnalyzer: invalid data', spectrum)
+    return <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d', color: '#f85149' }}>
+      频谱数据加载失败
+    </div>
+  }
+
   const { frequencies, magnitude_db, peak_hold_db } = spectrum
 
   const option = {
