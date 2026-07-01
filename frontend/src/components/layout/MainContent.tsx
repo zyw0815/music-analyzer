@@ -1,5 +1,11 @@
 import type { ActiveModule, FullAnalysisResponse } from '../../types/analysis'
 import QualityDetection from '../quality/QualityDetection'
+import SpectrumAnalyzer from '../spectrum/SpectrumAnalyzer'
+import SpectrogramHeatmap from '../spectrum/SpectrogramHeatmap'
+import FrequencyDistributionChart from '../spectrum/FrequencyDistribution'
+import WaveformDisplay from '../waveform/WaveformDisplay'
+import ChannelAnalysis from '../channel/ChannelAnalysis'
+import AudioInfo from '../audioinfo/AudioInfo'
 
 interface MainContentProps {
   activeModule: ActiveModule
@@ -33,24 +39,46 @@ export default function MainContent({ activeModule, analysisData }: MainContentP
     )
   }
 
-  if (activeModule === 'quality') {
-    return (
-      <main className="flex-1 overflow-auto p-5" style={{ backgroundColor: '#0d1117' }}>
-        <QualityDetection quality={analysisData.quality} />
-      </main>
-    )
-  }
-
   return (
     <main className="flex-1 overflow-auto p-5" style={{ backgroundColor: '#0d1117' }}>
-      <div className="rounded-lg p-6" style={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}>
-        <h2 className="text-lg font-semibold mb-3" style={{ color: '#e6edf3' }}>
-          {ph.icon} {ph.title}
-        </h2>
-        <p className="text-sm" style={{ color: '#8b949e' }}>
-          数据已加载，可视化组件将在后续任务中实现。
-        </p>
-      </div>
+      {activeModule === 'quality' && (
+        <QualityDetection quality={analysisData.quality} />
+      )}
+
+      {activeModule === 'spectrum' && (
+        <div className="flex flex-col gap-5">
+          <SpectrumAnalyzer spectrum={analysisData.spectrum.spectrum} />
+          <SpectrogramHeatmap spectrogram={analysisData.spectrum.spectrogram} />
+          <FrequencyDistributionChart distribution={analysisData.spectrum.frequency_distribution} />
+        </div>
+      )}
+
+      {activeModule === 'waveform' && (
+        <WaveformDisplay waveform={analysisData.waveform} />
+      )}
+
+      {activeModule === 'channel' && (
+        <ChannelAnalysis channel={analysisData.channel} />
+      )}
+
+      {activeModule === 'info' && (
+        <AudioInfo basicInfo={analysisData.basic_info} />
+      )}
+
+      {activeModule === 'player' && (
+        <div
+          className="rounded-lg p-6 flex flex-col items-center justify-center"
+          style={{ backgroundColor: '#161b22', border: '1px solid #30363d', minHeight: 300 }}
+        >
+          <div className="text-5xl mb-4">🎵</div>
+          <div className="text-lg font-semibold mb-2" style={{ color: '#e6edf3' }}>
+            {analysisData.basic_info.file.name}
+          </div>
+          <div className="text-sm" style={{ color: '#8b949e' }}>
+            使用顶栏播放器控制播放
+          </div>
+        </div>
+      )}
     </main>
   )
 }
