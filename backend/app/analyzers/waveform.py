@@ -1,0 +1,105 @@
+from typing import List, Dict
+import numpy as np
+import librosa
+
+
+class WaveformAnalyzer:
+    def __init__(self, file_path: str):
+        self.file_path = file_path
+
+    def analyze(self) -> dict:
+        y, sr = librosa.load(self.file_path, sr=None, mono=True)
+        return {
+            "waveform": self._waveform(y, sr),
+            "rms_envelope": self._rms_envelope(y, sr),
+            "clipping_regions": self._detect_clipping(y),
+            "silence_regions": self._detect_silence(y, sr),
+        }
+
+    def _waveform(self, y: np.ndarray, sr: int) -> dict:
+        # Downsample to ~1000 points per second
+        target_points = int(len(y) / sr * 1000)
+        if target_points < len(y):
+            indices = np.linspace(0, len(y) - 1, target_points, dtype=int)
+            samples = y[indices]
+        else:
+            samples = y
+        return {
+            "samples": samples.tolist(),
+            "sample_rate": sr,
+            "duration_seconds": round(len(y) / sr, 2),
+        }
+
+    def _rms_envelope(self, y: np.ndarray, sr: int) -> dict:
+        frame_length = 2048
+        hop = 512
+        rms = librosa.feature.rms(y=y, frame_length=frame_length, hop_length=hop)[0]
+        rms_db = 20 * np.log10(rms + 1e-10)
+        times = librosa.frames_to_time(np.arange(len(rms)), sr=sr, hop_length=hop)
+        return {
+            "values": rms_db.tolist(),
+            "times": times.tolist(),
+        }
+
+    def _detect_clipping(self, y: np.ndarray) -> list:
+        threshold = 0.999
+        clip_mask = np.abs(y) >= threshold
+        regions = []
+        consecutive = 0
+        start_idx = 0
+        for i, val in enumerate(clip_mask):
+            if val:
+                if consecutive == 0:
+                    start_idx = i
+                consecutive += 1
+            else:
+                if consecutive >= 3:
+                    regions.append({
+                        "start_sample": int(start_idx),
+                        "end_sample": int(i - 1),
+                        "length": consecutive,
+                    })
+                consecutive = 0
+        if consecutive >= 3:
+            regions.append({
+                "start_sample": int(start_idx),
+                "end_sample": int(len(y) - 1),
+                "length": consecutive,
+            })
+        return regions
+
+    def _detect_silence(self, y: np.ndarray, sr: int) -> list:
+        frame_length = 2048
+        hop = 512
+        rms = librosa.feature.rms(y=y, frame_length=frame_length, hop_length=hop)[0]
+        rms_db = 20 * np.log10(rms + 1e-10)
+        silence_threshold = -60.0
+        min_frames = int(0.3 * sr / hop)  # > 0.3s
+        silence_mask = rms_db < silence_threshold
+        regions = []
+        consecutive = 0
+        start_frame = 0
+        for i, val in enumerate(silence_mask):
+            if val:
+                if consecutive == 0:
+                    start_frame = i
+                consecutive += 1
+            else:
+                if consecutive >= min_frames:
+                    start_time = librosa.frames_to_time(start_frame, sr=sr, hop_length=hop)
+                    end_time = librosa.frames_to_time(i - 1, sr=sr, hop_length=hop)
+                    regions.append({
+                        "start_time": round(float(start_time), 3),
+                        "end_time": round(float(end_time), 3),
+                        "duration": round(float(end_time - start_time), 3),
+                    })
+                consecutive = 0
+        if consecutive >= min_frames:
+            start_time = librosa.frames_to_time(start_frame, sr=sr, hop_length=hop)
+            end_time = librosa.frames_to_time(len(silence_mask) - 1, sr=sr, hop_length=hop)
+            regions.append({
+                "start_time": round(float(start_time), 3),
+                "end_time": round(float(end_time), 3),
+                "duration": round(float(end_time - start_time), 3),
+            })
+        return regions
