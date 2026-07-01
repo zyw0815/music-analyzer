@@ -30,7 +30,7 @@ function App() {
         onToggleCollapse={() => setSidebarCollapsed((c) => !c)}
       />
       <div className="flex flex-col flex-1 min-w-0">
-        <TopBar basicInfo={analysisData?.basic_info} />
+        <TopBar basicInfo={analysisData?.basic_info} fileId={analysisData?.file_id} />
         {!analysisData ? (
           <main className="flex-1 overflow-auto p-5 flex flex-col items-center justify-center" style={{ backgroundColor: '#0d1117' }}>
             {error && (
