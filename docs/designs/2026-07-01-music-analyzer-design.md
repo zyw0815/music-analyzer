@@ -350,9 +350,8 @@ music-analyzer/
 │   ├── vite.config.ts
 │   └── tailwind.config.js
 ├── docs/
-│   └── superpowers/
-│       └── specs/
-│           └── 2026-07-01-music-analyzer-design.md  # This file
+│   └── designs/
+│       └── 2026-07-01-music-analyzer-design.md  # This file
 ├── .gitignore
 ├── CHANGELOG.md
 ├── LICENSE
