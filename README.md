@@ -26,8 +26,12 @@ MP3, WAV, FLAC, AAC, OGG, AIFF, WMA, M4A, APE, OPUS, DSF, DFF (DSD)
 ### 后端
 
 ```bash
-# 创建并激活 conda 环境（首次运行）
+# 创建 conda 环境（首次运行）
 conda env create -f backend/environment.yml
+```
+
+```bash
+# 激活 conda 环境
 conda activate music-analyzer
 
 # 启动后端
@@ -49,6 +53,22 @@ npm run dev
 
 - **后端**: Python, FastAPI, librosa, mutagen, numpy, scipy
 - **前端**: React, TypeScript, ECharts, Tailwind CSS, Vite
+
+## 常见问题
+
+### 端口被占用
+
+如果启动时提示 `address already in use`，说明端口被其他程序占用，执行以下命令释放：
+
+```bash
+# 释放后端端口 9220
+lsof -i :9220 -t | xargs kill
+
+# 释放前端端口 9211
+lsof -i :9211 -t | xargs kill
+```
+
+释放后重新启动服务即可。
 
 ## License
 
