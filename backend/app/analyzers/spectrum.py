@@ -46,25 +46,24 @@ class SpectrumAnalyzer:
         }
 
     def _frequency_distribution(self, y: np.ndarray, sr: int) -> dict:
-        bands = [
-            {"label": "Sub-bass (20-60Hz)", "low": 20, "high": 60},
-            {"label": "Bass (60-250Hz)", "low": 60, "high": 250},
-            {"label": "Mid (250-2kHz)", "low": 250, "high": 2000},
-            {"label": "Upper-mid (2k-6kHz)", "low": 2000, "high": 6000},
-            {"label": "High (6k-20kHz)", "low": 6000, "high": 20000},
+        bands_def = [
+            ("20-60Hz", 20, 60),
+            ("60-250Hz", 60, 250),
+            ("250-2kHz", 250, 2000),
+            ("2k-6kHz", 2000, 6000),
+            ("6k-20kHz", 6000, 20000),
         ]
         n_fft = 4096
         S = np.abs(librosa.stft(y, n_fft=n_fft))
         mag = np.mean(S, axis=1)
         freqs = librosa.fft_frequencies(sr=sr, n_fft=n_fft)
         total_energy = np.sum(mag ** 2)
-        result_bands = []
-        for band in bands:
-            mask = (freqs >= band["low"]) & (freqs < band["high"])
+        band_names = []
+        energies = []
+        for name, low, high in bands_def:
+            mask = (freqs >= low) & (freqs < high)
             energy = np.sum(mag[mask] ** 2) if np.any(mask) else 0
             energy_db = 10 * np.log10(energy / total_energy + 1e-10) if total_energy > 0 else -np.inf
-            result_bands.append({
-                "label": band["label"],
-                "energy_db": round(float(energy_db), 2),
-            })
-        return {"bands": result_bands}
+            band_names.append(name)
+            energies.append(round(float(energy_db), 2))
+        return {"bands": band_names, "energy_db": energies}
