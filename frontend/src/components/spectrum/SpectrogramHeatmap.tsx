@@ -6,6 +6,13 @@ interface SpectrogramHeatmapProps {
 }
 
 export default function SpectrogramHeatmap({ spectrogram }: SpectrogramHeatmapProps) {
+  if (!spectrogram || !spectrogram.frequencies || !spectrogram.times || !spectrogram.magnitude_db) {
+    console.error('SpectrogramHeatmap: invalid data', spectrogram)
+    return <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d', color: '#f85149' }}>
+      声谱图数据加载失败
+    </div>
+  }
+
   const { frequencies, times, magnitude_db } = spectrogram
 
   // Downsample to prevent browser crash (max ~40k data points)

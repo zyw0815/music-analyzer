@@ -8,6 +8,13 @@ interface FrequencyDistributionProps {
 const BAND_COLORS = ['#0c1445', '#2563eb', '#58a6ff', '#f59e0b', '#e6edf3']
 
 export default function FrequencyDistributionChart({ distribution }: FrequencyDistributionProps) {
+  if (!distribution || !distribution.bands || !distribution.energy_db) {
+    console.error('FrequencyDistribution: invalid data', distribution)
+    return <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d', color: '#f85149' }}>
+      频率分布数据加载失败
+    </div>
+  }
+
   const option = {
     tooltip: {
       trigger: 'axis' as const,
