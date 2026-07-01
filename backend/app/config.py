@@ -16,4 +16,4 @@ AUDIO_EXTENSIONS = {".mp3", ".wav", ".flac", ".aac", ".ogg", ".oga", ".opus",
 TMP_DIR = Path(os.environ.get("ANALYZER_TMP_DIR", "backend/tmp"))
 TMP_DIR.mkdir(parents=True, exist_ok=True)
 
-VERSION = "2.0.0"
+VERSION = "1.0.0"
