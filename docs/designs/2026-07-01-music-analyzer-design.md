@@ -23,7 +23,7 @@ A professional web-based audio analysis suite inspired by tools like "Audio Expe
 
 | Service | Port |
 |---------|------|
-| Backend API | `9210` |
+| Backend API | `9220` |
 | Frontend Dev Server | `9211` |
 
 ### 2.2 Python Environment
@@ -52,7 +52,7 @@ All Python development runs in Anaconda `work` environment. Dependencies managed
 └─────────────────────────────────────────────────────────────┘
                     │  REST API (JSON)
 ┌───────────────────┴─────────────────────────────────────────┐
-│                   FastAPI Backend (Port 9210)                 │
+│                   FastAPI Backend (Port 9220)                 │
 │                                                               │
 │  Endpoints:                                                   │
 │    POST /api/analyze        — full analysis (all modules)     │

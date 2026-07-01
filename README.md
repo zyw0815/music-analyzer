@@ -29,7 +29,7 @@ MP3, WAV, FLAC, AAC, OGG, AIFF, WMA, M4A, APE, OPUS, DSF, DFF (DSD)
 conda activate work
 cd backend
 pip install fastapi uvicorn python-multipart librosa mutagen numpy scipy pytest httpx
-uvicorn app.main:app --host 0.0.0.0 --port 9210
+uvicorn app.main:app --host 0.0.0.0 --port 9220
 ```
 
 ### 前端
