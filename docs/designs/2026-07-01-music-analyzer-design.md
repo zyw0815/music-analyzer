@@ -1,6 +1,7 @@
 # Music Audio Quality Analyzer — Design Spec
 
 **Date**: 2026-07-01
+**Author**: Yiwei Zhang
 **Status**: Draft
 **Version**: 2.0
 
