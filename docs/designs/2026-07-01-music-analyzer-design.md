@@ -85,7 +85,7 @@ Any format supported by ffmpeg is accepted. DSD files are converted to PCM via f
 
 ### 4.2 File Size Limit
 
-Maximum upload size: **2 GB**. DSD files (especially DSD256) can exceed 1 GB; this limit accommodates the full range.
+Maximum upload size: **5 GB**. DSD files (especially DSD256) can exceed 1 GB; this limit accommodates the full range.
 
 ### 4.2 Analysis Modules
 
@@ -215,7 +215,7 @@ Computes a weighted quality score (0-100) with sub-scores and letter grade.
 
 Accepts: `multipart/form-data` with field `file` (audio file)
 Returns: JSON with all analysis results
-Max file size: 2 GB
+Max file size: 5 GB
 
 **Response schema:**
 ```json
@@ -415,7 +415,7 @@ Semantic Versioning: `MAJOR.MINOR.PATCH`
 | Scenario | Handling |
 |----------|----------|
 | Invalid file format | Return 400 with supported format list |
-| File > 2GB | Return 413 with size limit message |
+| File > 5GB | Return 413 with size limit message |
 | Corrupted audio file | Return 500 with "file may be corrupted" message |
 | ffprobe/librosa failure | Catch per-module, return partial results with warnings |
 | Network timeout | Frontend shows retry button after 30s |
