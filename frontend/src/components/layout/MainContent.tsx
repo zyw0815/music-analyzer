@@ -6,6 +6,7 @@ import FrequencyDistributionChart from '../spectrum/FrequencyDistribution'
 import WaveformDisplay from '../waveform/WaveformDisplay'
 import ChannelAnalysis from '../channel/ChannelAnalysis'
 import AudioInfo from '../audioinfo/AudioInfo'
+import ErrorBoundary from '../ErrorBoundary'
 
 interface MainContentProps {
   activeModule: ActiveModule
@@ -42,27 +43,37 @@ export default function MainContent({ activeModule, analysisData }: MainContentP
   return (
     <main className="flex-1 overflow-auto p-5" style={{ backgroundColor: '#0d1117' }}>
       {activeModule === 'quality' && (
-        <QualityDetection quality={analysisData.quality} />
+        <ErrorBoundary moduleName="质量检测">
+          <QualityDetection quality={analysisData.quality} />
+        </ErrorBoundary>
       )}
 
       {activeModule === 'spectrum' && (
-        <div className="flex flex-col gap-5">
-          <SpectrumAnalyzer spectrum={analysisData.spectrum.spectrum} />
-          <SpectrogramHeatmap spectrogram={analysisData.spectrum.spectrogram} />
-          <FrequencyDistributionChart distribution={analysisData.spectrum.frequency_distribution} />
-        </div>
+        <ErrorBoundary moduleName="频谱分析">
+          <div className="flex flex-col gap-5">
+            <SpectrumAnalyzer spectrum={analysisData.spectrum.spectrum} />
+            <SpectrogramHeatmap spectrogram={analysisData.spectrum.spectrogram} />
+            <FrequencyDistributionChart distribution={analysisData.spectrum.frequency_distribution} />
+          </div>
+        </ErrorBoundary>
       )}
 
       {activeModule === 'waveform' && (
-        <WaveformDisplay waveform={analysisData.waveform} />
+        <ErrorBoundary moduleName="波形显示">
+          <WaveformDisplay waveform={analysisData.waveform} />
+        </ErrorBoundary>
       )}
 
       {activeModule === 'channel' && (
-        <ChannelAnalysis channel={analysisData.channel} />
+        <ErrorBoundary moduleName="声道分析">
+          <ChannelAnalysis channel={analysisData.channel} />
+        </ErrorBoundary>
       )}
 
       {activeModule === 'info' && (
-        <AudioInfo basicInfo={analysisData.basic_info} />
+        <ErrorBoundary moduleName="音频信息">
+          <AudioInfo basicInfo={analysisData.basic_info} />
+        </ErrorBoundary>
       )}
 
       {activeModule === 'player' && (
