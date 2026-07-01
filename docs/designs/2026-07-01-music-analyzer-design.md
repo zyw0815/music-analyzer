@@ -75,7 +75,17 @@ All Python development runs in Anaconda `work` environment. Dependencies managed
 
 ### 4.1 Supported Formats
 
-MP3, WAV, FLAC, AAC, OGG, AIFF, WMA, OPUS, M4A. Any format supported by ffmpeg.
+| Category | Formats |
+|----------|---------|
+| Lossless | WAV, FLAC, AIFF, APE, ALAC (M4A) |
+| Lossy | MP3, AAC, OGG (Vorbis/Opus), WMA |
+| DSD | DSF, DFF (DSD64/128/256) |
+
+Any format supported by ffmpeg is accepted. DSD files are converted to PCM via ffmpeg's `dsd2pcm` filter before spectral/distortion analysis; basic metadata (DSD rate, channel count) is read directly from DSF/DFF headers.
+
+### 4.2 File Size Limit
+
+Maximum upload size: **2 GB**. DSD files (especially DSD256) can exceed 1 GB; this limit accommodates the full range.
 
 ### 4.2 Analysis Modules
 
@@ -97,7 +107,9 @@ Extracts technical metadata from the audio file.
 }
 ```
 
-**Dependencies:** `mutagen` (metadata), `ffprobe` (fallback for unsupported tags)
+**Dependencies:** `mutagen` (metadata), `ffprobe` (fallback for unsupported tags, DSD info)
+
+**DSD handling:** For DSF/DFF files, extract DSD-specific metadata (DSD rate: 64/128/256, channel count) from file headers directly. For spectral/distortion analysis, convert DSD to PCM via `ffmpeg -i input.dsf -af dsd2pcm -f wav pipe:1`.
 
 #### Module 2: SpectrumModule
 
@@ -203,7 +215,7 @@ Computes a weighted quality score (0-100) with sub-scores and letter grade.
 
 Accepts: `multipart/form-data` with field `file` (audio file)
 Returns: JSON with all analysis results
-Max file size: 100 MB
+Max file size: 2 GB
 
 **Response schema:**
 ```json
@@ -403,7 +415,7 @@ Semantic Versioning: `MAJOR.MINOR.PATCH`
 | Scenario | Handling |
 |----------|----------|
 | Invalid file format | Return 400 with supported format list |
-| File > 100MB | Return 413 with size limit message |
+| File > 2GB | Return 413 with size limit message |
 | Corrupted audio file | Return 500 with "file may be corrupted" message |
 | ffprobe/librosa failure | Catch per-module, return partial results with warnings |
 | Network timeout | Frontend shows retry button after 30s |
