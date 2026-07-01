@@ -14,7 +14,7 @@ A professional web-based audio analysis suite inspired by tools like "Audio Expe
 | Layer | Technology |
 |-------|-----------|
 | Frontend | React 18 + TypeScript + ECharts + Tailwind CSS |
-| Backend | Python 3 (Anaconda `work` env) + FastAPI |
+| Backend | Python 3 (Anaconda `music-analyzer` env) + FastAPI |
 | Audio Analysis | librosa, mutagen, ffprobe (ffmpeg), numpy, scipy |
 | Build/Dev | Vite (frontend), uvicorn (backend) |
 | Repository | GitHub, with full SE workflow |
@@ -28,7 +28,7 @@ A professional web-based audio analysis suite inspired by tools like "Audio Expe
 
 ### 2.2 Python Environment
 
-All Python development runs in Anaconda `work` environment. Dependencies managed via `environment.yml`.
+All Python development runs in Anaconda `music-analyzer` environment. Dependencies managed via `environment.yml`.
 
 ## 3. System Architecture
 

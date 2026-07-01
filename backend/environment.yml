@@ -1,4 +1,4 @@
-name: work
+name: music-analyzer
 channels:
   - defaults
   - conda-forge
