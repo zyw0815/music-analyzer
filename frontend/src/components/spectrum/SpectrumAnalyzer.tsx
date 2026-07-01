@@ -98,7 +98,7 @@ export default function SpectrumAnalyzer({ spectrum }: SpectrumAnalyzerProps) {
   return (
     <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}>
       <h3 className="text-base font-semibold mb-3" style={{ color: '#e6edf3' }}>频谱分析</h3>
-      <ReactECharts option={option} style={{ height: 350 }} />
+      <ReactECharts option={option} style={{ width: '100%', height: 350 }} />
     </div>
   )
 }

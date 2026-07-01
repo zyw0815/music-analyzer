@@ -68,7 +68,7 @@ export default function FrequencyDistributionChart({ distribution }: FrequencyDi
   return (
     <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}>
       <h3 className="text-base font-semibold mb-3" style={{ color: '#e6edf3' }}>频率分布</h3>
-      <ReactECharts option={option} style={{ height: 280 }} />
+      <ReactECharts option={option} style={{ width: '100%', height: 280 }} />
     </div>
   )
 }

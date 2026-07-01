@@ -78,7 +78,7 @@ export default function PhaseCorrelation({ correlation }: PhaseCorrelationProps)
   return (
     <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}>
       <h3 className="text-base font-semibold mb-2" style={{ color: '#e6edf3' }}>相位相关</h3>
-      <ReactECharts option={option} style={{ height: 180 }} />
+      <ReactECharts option={option} style={{ width: '100%', height: 180 }} />
       <div className="text-center text-sm" style={{ color: '#8b949e' }}>
         值: {correlation.toFixed(3)}
       </div>
