@@ -8,12 +8,21 @@ interface SpectrogramHeatmapProps {
 export default function SpectrogramHeatmap({ spectrogram }: SpectrogramHeatmapProps) {
   const { frequencies, times, magnitude_db } = spectrogram
 
-  // Flatten 2D array into [time_index, freq_index, value] for ECharts heatmap
+  // Downsample to prevent browser crash (max ~40k data points)
+  const MAX_TIME = 200
+  const MAX_FREQ = 200
+  const timeStep = Math.max(1, Math.floor(times.length / MAX_TIME))
+  const freqStep = Math.max(1, Math.floor(frequencies.length / MAX_FREQ))
+  const dTimes = times.filter((_, i) => i % timeStep === 0)
+  const dFreqs = frequencies.filter((_, i) => i % freqStep === 0)
+
   const data: Array<[number, number, number]> = []
-  for (let t = 0; t < times.length; t++) {
-    for (let f = 0; f < frequencies.length; f++) {
-      if (magnitude_db[t] && magnitude_db[t][f] !== undefined) {
-        data.push([t, f, magnitude_db[t][f]])
+  for (let t = 0; t < dTimes.length; t++) {
+    for (let f = 0; f < dFreqs.length; f++) {
+      const origT = t * timeStep
+      const origF = f * freqStep
+      if (magnitude_db[origT] && magnitude_db[origT][origF] !== undefined) {
+        data.push([t, f, magnitude_db[origT][origF]])
       }
     }
   }
@@ -25,8 +34,8 @@ export default function SpectrogramHeatmap({ spectrogram }: SpectrogramHeatmapPr
       textStyle: { color: '#e6edf3', fontSize: 12 },
       formatter: (params: { value: [number, number, number] }) => {
         const [tIdx, fIdx, db] = params.value
-        const time = times[tIdx]
-        const freq = frequencies[fIdx]
+        const time = dTimes[tIdx]
+        const freq = dFreqs[fIdx]
         const freqStr = freq >= 1000 ? `${(freq / 1000).toFixed(1)} kHz` : `${freq} Hz`
         const timeStr = `${Math.floor(time / 60)}:${String(Math.floor(time % 60)).padStart(2, '0')}`
         return `时间: ${timeStr}<br/>频率: ${freqStr}<br/>幅度: ${db.toFixed(1)} dB`
@@ -40,17 +49,17 @@ export default function SpectrogramHeatmap({ spectrogram }: SpectrogramHeatmapPr
     },
     xAxis: {
       type: 'category' as const,
-      data: times.map((t) => {
+      data: dTimes.map((t) => {
         const min = Math.floor(t / 60)
         const sec = Math.floor(t % 60)
         return `${min}:${String(sec).padStart(2, '0')}`
       }),
-      axisLabel: { color: '#8b949e', interval: Math.floor(times.length / 10) },
+      axisLabel: { color: '#8b949e', interval: Math.floor(dTimes.length / 10) },
       axisLine: { lineStyle: { color: '#30363d' } },
     },
     yAxis: {
       type: 'category' as const,
-      data: frequencies.map((f) => (f >= 1000 ? `${(f / 1000).toFixed(1)}k` : `${f}`)),
+      data: dFreqs.map((f) => (f >= 1000 ? `${(f / 1000).toFixed(1)}k` : `${f}`)),
       axisLabel: { color: '#8b949e' },
       axisLine: { lineStyle: { color: '#30363d' } },
     },

@@ -14,6 +14,17 @@ function formatTime(seconds: number): string {
 export default function WaveformDisplay({ waveform }: WaveformDisplayProps) {
   const { waveform: wave, rms_envelope, clipping_regions, silence_regions } = waveform
 
+  // Downsample waveform to max 5000 points to prevent browser crash
+  const MAX_POINTS = 5000
+  const step = Math.max(1, Math.floor(wave.samples.length / MAX_POINTS))
+  const dTimes = wave.times.filter((_, i) => i % step === 0)
+  const dSamples = wave.samples.filter((_, i) => i % step === 0)
+
+  // Downsample RMS envelope similarly
+  const rmsStep = Math.max(1, Math.floor(rms_envelope.values.length / MAX_POINTS))
+  const dRmsTimes = rms_envelope.times.filter((_, i) => i % rmsStep === 0)
+  const dRmsValues = rms_envelope.values.filter((_, i) => i % rmsStep === 0)
+
   // Build markArea data for clipping and silence regions
   const markAreaData: Array<[{ xAxis: number; itemStyle: { color: string } }, { xAxis: number }]> = []
 
@@ -57,7 +68,7 @@ export default function WaveformDisplay({ waveform }: WaveformDisplayProps) {
       name: '时间',
       nameTextStyle: { color: '#8b949e' },
       min: 0,
-      max: wave.times[wave.times.length - 1] || 0,
+      max: dTimes[dTimes.length - 1] || 0,
       axisLabel: {
         color: '#8b949e',
         formatter: (v: number) => formatTime(v),
@@ -97,7 +108,7 @@ export default function WaveformDisplay({ waveform }: WaveformDisplayProps) {
       {
         name: '波形',
         type: 'line',
-        data: wave.times.map((t, i) => [t, wave.samples[i]]),
+        data: dTimes.map((t, i) => [t, dSamples[i]]),
         smooth: false,
         symbol: 'none',
         lineStyle: { color: '#58a6ff', width: 1 },
@@ -122,7 +133,7 @@ export default function WaveformDisplay({ waveform }: WaveformDisplayProps) {
       {
         name: 'RMS 包络',
         type: 'line',
-        data: rms_envelope.times.map((t, i) => [t, rms_envelope.values[i]]),
+        data: dRmsTimes.map((t, i) => [t, dRmsValues[i]]),
         smooth: true,
         symbol: 'none',
         lineStyle: { color: '#f85149', width: 1 },
@@ -130,7 +141,7 @@ export default function WaveformDisplay({ waveform }: WaveformDisplayProps) {
       {
         name: 'RMS 包络 (反)',
         type: 'line',
-        data: rms_envelope.times.map((t, i) => [t, -rms_envelope.values[i]]),
+        data: dRmsTimes.map((t, i) => [t, -dRmsValues[i]]),
         smooth: true,
         symbol: 'none',
         lineStyle: { color: '#f85149', width: 1 },
