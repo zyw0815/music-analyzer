@@ -4,7 +4,7 @@
 
 > **Architecture:** React + TypeScript frontend (Vite, port 9211) communicates with Python FastAPI backend (port 9220) via REST API. Backend has 6 independent analysis modules orchestrated in parallel.
 
-> **Tech Stack:** Python 3 (Anaconda `work`), FastAPI, librosa, mutagen, numpy, scipy, ffmpeg | React 18, TypeScript, ECharts, Tailwind CSS, Vite
+> **Tech Stack:** Python 3 (Anaconda `music-analyzer`), FastAPI, librosa, mutagen, numpy, scipy, ffmpeg | React 18, TypeScript, ECharts, Tailwind CSS, Vite
 
 > **Spec:** `docs/designs/2026-07-01-music-analyzer-design.md`
 
@@ -344,7 +344,7 @@ def sample_wav_silence(tmp_dir):
 ### Step 1.9: Install and verify
 
 ```bash
-conda activate work
+conda activate music-analyzer
 cd backend && pip install -e .
 uvicorn app.main:app --host 0.0.0.0 --port 9220
 # In another terminal:
@@ -1767,7 +1767,7 @@ cd backend && python -m pytest tests/ -v --tb=short
 
 ```bash
 # Terminal 1:
-cd backend && conda activate work && uvicorn app.main:app --host 0.0.0.0 --port 9220
+cd backend && conda activate music-analyzer && uvicorn app.main:app --host 0.0.0.0 --port 9220
 
 # Terminal 2:
 cd frontend && npm run dev
