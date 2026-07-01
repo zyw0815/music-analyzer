@@ -26,9 +26,12 @@ MP3, WAV, FLAC, AAC, OGG, AIFF, WMA, M4A, APE, OPUS, DSF, DFF (DSD)
 ### 后端
 
 ```bash
-conda activate work
+# 创建并激活 conda 环境（首次运行）
+conda env create -f backend/environment.yml
+conda activate music-analyzer
+
+# 启动后端
 cd backend
-pip install fastapi uvicorn python-multipart librosa mutagen numpy scipy pytest httpx
 uvicorn app.main:app --host 0.0.0.0 --port 9220
 ```
 
