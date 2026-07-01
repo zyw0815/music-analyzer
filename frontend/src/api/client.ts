@@ -13,7 +13,6 @@ export async function analyzeFile(
   const formData = new FormData()
   formData.append('file', file)
   const response = await api.post<FullAnalysisResponse>('/analyze', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
     onUploadProgress: (e) => {
       if (e.total && onProgress) {
         onProgress(Math.round((e.loaded / e.total) * 100))
@@ -26,9 +25,7 @@ export async function analyzeFile(
 export async function analyzeBasic(file: File): Promise<BasicInfoResponse> {
   const formData = new FormData()
   formData.append('file', file)
-  const response = await api.post<BasicInfoResponse>('/analyze/basic', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  })
+  const response = await api.post<BasicInfoResponse>('/analyze/basic', formData)
   return response.data
 }
 
