@@ -2,7 +2,7 @@
 
 > **Goal:** Build a professional web-based audio quality analyzer with 6 analysis modules, built-in player, and dark-themed sidebar navigation.
 
-> **Architecture:** React + TypeScript frontend (Vite, port 9211) communicates with Python FastAPI backend (port 9210) via REST API. Backend has 6 independent analysis modules orchestrated in parallel.
+> **Architecture:** React + TypeScript frontend (Vite, port 9211) communicates with Python FastAPI backend (port 9220) via REST API. Backend has 6 independent analysis modules orchestrated in parallel.
 
 > **Tech Stack:** Python 3 (Anaconda `work`), FastAPI, librosa, mutagen, numpy, scipy, ffmpeg | React 18, TypeScript, ECharts, Tailwind CSS, Vite
 
@@ -176,7 +176,7 @@ touch backend/app/__init__.py backend/app/api/__init__.py backend/app/analyzers/
 import os
 from pathlib import Path
 
-BACKEND_PORT = 9210
+BACKEND_PORT = 9220
 FRONTEND_PORT = 9211
 MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024 * 1024  # 5 GB
 
@@ -346,9 +346,9 @@ def sample_wav_silence(tmp_dir):
 ```bash
 conda activate work
 cd backend && pip install -e .
-uvicorn app.main:app --host 0.0.0.0 --port 9210
+uvicorn app.main:app --host 0.0.0.0 --port 9220
 # In another terminal:
-curl http://localhost:9210/api/health
+curl http://localhost:9220/api/health
 # Expected: {"status":"ok","version":"2.0.0"}
 ```
 
@@ -1570,7 +1570,7 @@ export default defineConfig({
   server: {
     port: 9211,
     proxy: {
-      '/api': 'http://localhost:9210',
+      '/api': 'http://localhost:9220',
     },
   },
 })
@@ -1767,7 +1767,7 @@ cd backend && python -m pytest tests/ -v --tb=short
 
 ```bash
 # Terminal 1:
-cd backend && conda activate work && uvicorn app.main:app --host 0.0.0.0 --port 9210
+cd backend && conda activate work && uvicorn app.main:app --host 0.0.0.0 --port 9220
 
 # Terminal 2:
 cd frontend && npm run dev
