@@ -48,7 +48,7 @@ export default function MainContent({ activeModule, analysisData }: MainContentP
         </ErrorBoundary>
       )}
 
-      {activeModule === 'spectrum' && (
+      {activeModule === 'spectrum' && analysisData.spectrum && (
         <ErrorBoundary moduleName="频谱分析">
           <div className="flex flex-col gap-5">
             <SpectrumAnalyzer spectrum={analysisData.spectrum.spectrum} />
@@ -58,13 +58,19 @@ export default function MainContent({ activeModule, analysisData }: MainContentP
         </ErrorBoundary>
       )}
 
-      {activeModule === 'waveform' && (
+      {activeModule === 'spectrum' && !analysisData.spectrum && (
+        <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d', color: '#f85149' }}>
+          频谱数据未加载
+        </div>
+      )}
+
+      {activeModule === 'waveform' && analysisData.waveform && (
         <ErrorBoundary moduleName="波形显示">
           <WaveformDisplay waveform={analysisData.waveform} />
         </ErrorBoundary>
       )}
 
-      {activeModule === 'channel' && (
+      {activeModule === 'channel' && analysisData.channel && (
         <ErrorBoundary moduleName="声道分析">
           <ChannelAnalysis channel={analysisData.channel} />
         </ErrorBoundary>
