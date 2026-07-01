@@ -12,21 +12,25 @@ class WaveformAnalyzer:
         return {
             "waveform": self._waveform(y, sr),
             "rms_envelope": self._rms_envelope(y, sr),
-            "clipping_regions": self._detect_clipping(y),
+            "clipping_regions": self._detect_clipping(y, sr),
             "silence_regions": self._detect_silence(y, sr),
         }
 
     def _waveform(self, y: np.ndarray, sr: int) -> dict:
-        # Downsample to ~1000 points per second
-        target_points = int(len(y) / sr * 1000)
-        if target_points < len(y):
-            indices = np.linspace(0, len(y) - 1, target_points, dtype=int)
+        # Downsample to max ~5000 points
+        max_points = 5000
+        if len(y) > max_points:
+            indices = np.linspace(0, len(y) - 1, max_points, dtype=int)
             samples = y[indices]
+            times = indices / sr
         else:
             samples = y
+            times = np.arange(len(y)) / sr
         return {
             "samples": samples.tolist(),
+            "times": np.round(times, 4).tolist(),
             "sample_rate": sr,
+            "downsampled_rate": sr,
             "duration_seconds": round(len(y) / sr, 2),
         }
 
@@ -41,7 +45,7 @@ class WaveformAnalyzer:
             "times": times.tolist(),
         }
 
-    def _detect_clipping(self, y: np.ndarray) -> list:
+    def _detect_clipping(self, y: np.ndarray, sr: int) -> list:
         threshold = 0.999
         clip_mask = np.abs(y) >= threshold
         regions = []
@@ -55,16 +59,14 @@ class WaveformAnalyzer:
             else:
                 if consecutive >= 3:
                     regions.append({
-                        "start_sample": int(start_idx),
-                        "end_sample": int(i - 1),
-                        "length": consecutive,
+                        "start": round(float(start_idx / sr), 3),
+                        "end": round(float(i / sr), 3),
                     })
                 consecutive = 0
         if consecutive >= 3:
             regions.append({
-                "start_sample": int(start_idx),
-                "end_sample": int(len(y) - 1),
-                "length": consecutive,
+                "start": round(float(start_idx / sr), 3),
+                "end": round(float(len(y) / sr), 3),
             })
         return regions
 
@@ -89,17 +91,15 @@ class WaveformAnalyzer:
                     start_time = librosa.frames_to_time(start_frame, sr=sr, hop_length=hop)
                     end_time = librosa.frames_to_time(i - 1, sr=sr, hop_length=hop)
                     regions.append({
-                        "start_time": round(float(start_time), 3),
-                        "end_time": round(float(end_time), 3),
-                        "duration": round(float(end_time - start_time), 3),
+                        "start": round(float(start_time), 3),
+                        "end": round(float(end_time), 3),
                     })
                 consecutive = 0
         if consecutive >= min_frames:
             start_time = librosa.frames_to_time(start_frame, sr=sr, hop_length=hop)
             end_time = librosa.frames_to_time(len(silence_mask) - 1, sr=sr, hop_length=hop)
             regions.append({
-                "start_time": round(float(start_time), 3),
-                "end_time": round(float(end_time), 3),
-                "duration": round(float(end_time - start_time), 3),
+                "start": round(float(start_time), 3),
+                "end": round(float(end_time), 3),
             })
         return regions
