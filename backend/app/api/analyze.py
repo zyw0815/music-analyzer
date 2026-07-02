@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, File
 
 from app.config import SUPPORTED_FORMATS, AUDIO_EXTENSIONS, MAX_FILE_SIZE_BYTES
 from app.utils import get_analysis_path, save_upload
+from app.analyzers.context import AnalysisContext
 from app.analyzers.basic_info import BasicInfoAnalyzer
 from app.analyzers.quality import QualityAnalyzer
 from app.analyzers.spectrum import SpectrumAnalyzer
@@ -46,21 +47,22 @@ async def analyze_file(file: UploadFile = File(...)):
     _file_store[file_id] = saved_path
 
     analysis_path = get_analysis_path(saved_path)
+    context = AnalysisContext.from_file(str(analysis_path))
 
-    basic_analyzer = BasicInfoAnalyzer(str(analysis_path))
+    basic_analyzer = BasicInfoAnalyzer(str(analysis_path), context)
     basic_info = basic_analyzer.analyze()
     basic_info = _apply_display_filename(basic_info, file)
 
-    quality_analyzer = QualityAnalyzer(str(analysis_path), basic_info)
+    quality_analyzer = QualityAnalyzer(str(analysis_path), basic_info, context)
     quality_info = quality_analyzer.analyze()
 
-    spectrum_analyzer = SpectrumAnalyzer(str(analysis_path))
+    spectrum_analyzer = SpectrumAnalyzer(str(analysis_path), context)
     spectrum_info = spectrum_analyzer.analyze()
 
-    waveform_analyzer = WaveformAnalyzer(str(analysis_path))
+    waveform_analyzer = WaveformAnalyzer(str(analysis_path), context)
     waveform_info = waveform_analyzer.analyze()
 
-    channel_analyzer = ChannelAnalyzer(str(analysis_path))
+    channel_analyzer = ChannelAnalyzer(str(analysis_path), context)
     channel_info = channel_analyzer.analyze()
 
     return {
@@ -84,8 +86,9 @@ async def analyze_basic(file: UploadFile = File(...)):
     _file_store[file_id] = saved_path
 
     analysis_path = get_analysis_path(saved_path)
+    context = AnalysisContext.from_file(str(analysis_path))
 
-    basic_analyzer = BasicInfoAnalyzer(str(analysis_path))
+    basic_analyzer = BasicInfoAnalyzer(str(analysis_path), context)
     basic_info = basic_analyzer.analyze()
     basic_info = _apply_display_filename(basic_info, file)
 

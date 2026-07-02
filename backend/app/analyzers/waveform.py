@@ -1,14 +1,18 @@
-from typing import List, Dict
 import numpy as np
 import librosa
+from app.analyzers.context import AnalysisContext
 
 
 class WaveformAnalyzer:
-    def __init__(self, file_path: str):
+    def __init__(self, file_path: str, context: AnalysisContext | None = None):
         self.file_path = file_path
+        self.context = context
 
     def analyze(self) -> dict:
-        y, sr = librosa.load(self.file_path, sr=None, mono=True)
+        if self.context is not None:
+            y, sr = self.context.mono, self.context.sr
+        else:
+            y, sr = librosa.load(self.file_path, sr=None, mono=True)
         return {
             "waveform": self._waveform(y, sr),
             "rms_envelope": self._rms_envelope(y, sr),
@@ -37,7 +41,10 @@ class WaveformAnalyzer:
     def _rms_envelope(self, y: np.ndarray, sr: int) -> dict:
         frame_length = 2048
         hop = 512
-        rms = librosa.feature.rms(y=y, frame_length=frame_length, hop_length=hop)[0]
+        if self.context is not None:
+            rms = self.context.rms(y, frame_length=frame_length, hop_length=hop)
+        else:
+            rms = librosa.feature.rms(y=y, frame_length=frame_length, hop_length=hop)[0]
         rms_db = 20 * np.log10(rms + 1e-10)
         times = librosa.frames_to_time(np.arange(len(rms)), sr=sr, hop_length=hop)
         return {
@@ -73,7 +80,10 @@ class WaveformAnalyzer:
     def _detect_silence(self, y: np.ndarray, sr: int) -> list:
         frame_length = 2048
         hop = 512
-        rms = librosa.feature.rms(y=y, frame_length=frame_length, hop_length=hop)[0]
+        if self.context is not None:
+            rms = self.context.rms(y, frame_length=frame_length, hop_length=hop)
+        else:
+            rms = librosa.feature.rms(y=y, frame_length=frame_length, hop_length=hop)[0]
         rms_db = 20 * np.log10(rms + 1e-10)
         silence_threshold = -60.0
         min_frames = int(0.3 * sr / hop)  # > 0.3s

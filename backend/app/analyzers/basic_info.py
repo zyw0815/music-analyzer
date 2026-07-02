@@ -4,12 +4,14 @@ from pathlib import Path
 import numpy as np
 import librosa
 from mutagen import File as MutagenFile
+from app.analyzers.context import AnalysisContext
 
 
 class BasicInfoAnalyzer:
-    def __init__(self, file_path: str):
+    def __init__(self, file_path: str, context: Optional[AnalysisContext] = None):
         self.file_path = Path(file_path)
         self.suffix = self.file_path.suffix.lower()
+        self.context = context
 
     def analyze(self) -> dict:
         return {
@@ -23,7 +25,10 @@ class BasicInfoAnalyzer:
 
     def _file_info(self) -> dict:
         size = self.file_path.stat().st_size
-        md5 = hashlib.md5(self.file_path.read_bytes()).hexdigest()
+        md5 = hashlib.md5()
+        with self.file_path.open("rb") as f:
+            for chunk in iter(lambda: f.read(1024 * 1024), b""):
+                md5.update(chunk)
         fmt = self.suffix.lstrip(".").upper()
         if fmt == "M4A":
             fmt = "ALAC/AAC"
@@ -32,7 +37,7 @@ class BasicInfoAnalyzer:
             "size_bytes": size,
             "format": fmt,
             "encoder": self._get_encoder(),
-            "md5": md5,
+            "md5": md5.hexdigest(),
         }
 
     def _get_encoder(self) -> Optional[str]:
@@ -45,7 +50,12 @@ class BasicInfoAnalyzer:
         return None
 
     def _audio_info(self) -> dict:
-        y, sr = librosa.load(str(self.file_path), sr=None, mono=False, duration=0.1)
+        if self.context is not None:
+            y = self.context.y_stereo
+            sr = self.context.sr
+        else:
+            y, sr = librosa.load(str(self.file_path), sr=None, mono=False, duration=0.1)
+
         if y.ndim == 1:
             channels = 1
         else:
@@ -77,15 +87,21 @@ class BasicInfoAnalyzer:
         }
 
     def _timing_info(self) -> dict:
-        y, sr = librosa.load(str(self.file_path), sr=None, mono=True, duration=None)
-        duration = len(y) / sr
+        if self.context is not None:
+            duration = len(self.context.mono) / self.context.sr
+        else:
+            y, sr = librosa.load(str(self.file_path), sr=None, mono=True, duration=None)
+            duration = len(y) / sr
         return {
             "duration_seconds": round(duration, 2),
             "start_offset": 0.0,
         }
 
     def _loudness_info(self) -> dict:
-        y, sr = librosa.load(str(self.file_path), sr=None, mono=True)
+        if self.context is not None:
+            y = self.context.mono
+        else:
+            y, sr = librosa.load(str(self.file_path), sr=None, mono=True)
         peak = np.max(np.abs(y))
         peak_db = 20 * np.log10(peak) if peak > 0 else -np.inf
         rms = np.sqrt(np.mean(y ** 2))

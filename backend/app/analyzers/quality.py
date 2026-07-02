@@ -1,17 +1,24 @@
 import numpy as np
 import librosa
+from app.analyzers.context import AnalysisContext
 
 
 class QualityAnalyzer:
-    def __init__(self, file_path: str, basic_info: dict):
+    def __init__(self, file_path: str, basic_info: dict, context: AnalysisContext | None = None):
         self.file_path = file_path
         self.info = basic_info
+        self.context = context
         self.y = None
         self.sr = None
+        self._clipping = None
+        self._noise_floor = None
 
     def _load(self):
         if self.y is None:
-            self.y, self.sr = librosa.load(self.file_path, sr=None, mono=True)
+            if self.context is not None:
+                self.y, self.sr = self.context.mono, self.context.sr
+            else:
+                self.y, self.sr = librosa.load(self.file_path, sr=None, mono=True)
 
     def analyze(self) -> dict:
         self._load()
@@ -63,7 +70,10 @@ class QualityAnalyzer:
         return round(clip_score * 0.4 + noise_score * 0.3 + 100 * 0.3)
 
     def _score_channel(self) -> int:
-        y_stereo, sr = librosa.load(self.file_path, sr=None, mono=False)
+        if self.context is not None:
+            y_stereo = self.context.y_stereo
+        else:
+            y_stereo, sr = librosa.load(self.file_path, sr=None, mono=False)
         if y_stereo.ndim == 1:
             return 75
         l, r = y_stereo[0], y_stereo[1]
@@ -76,7 +86,10 @@ class QualityAnalyzer:
         return round(balance_score * 0.5 + stereo_score * 0.5)
 
     def _score_spectral(self) -> int:
-        S = np.abs(librosa.stft(self.y, n_fft=4096))
+        if self.context is not None:
+            S = self.context.stft(self.y, n_fft=4096)
+        else:
+            S = np.abs(librosa.stft(self.y, n_fft=4096))
         freqs = librosa.fft_frequencies(sr=self.sr, n_fft=4096)
         mag = np.mean(S, axis=1)
         high_mask = freqs >= 10000
@@ -95,6 +108,8 @@ class QualityAnalyzer:
         return round(clip_score)
 
     def _detect_clipping(self) -> dict:
+        if self._clipping is not None:
+            return self._clipping
         threshold = 0.999
         clip_mask = np.abs(self.y) >= threshold
         clip_count = 0
@@ -111,14 +126,21 @@ class QualityAnalyzer:
                 in_clip = False
         total = len(self.y)
         ratio = np.sum(clip_mask) / total * 100 if total > 0 else 0
-        return {"detected": clip_count > 0, "clip_count": clip_count, "clip_ratio_percent": round(ratio, 4)}
+        self._clipping = {"detected": clip_count > 0, "clip_count": clip_count, "clip_ratio_percent": round(ratio, 4)}
+        return self._clipping
 
     def _estimate_noise_floor(self) -> float:
+        if self._noise_floor is not None:
+            return self._noise_floor
         frame_length = 2048
         hop = 512
-        rms = librosa.feature.rms(y=self.y, frame_length=frame_length, hop_length=hop)[0]
+        if self.context is not None:
+            rms = self.context.rms(self.y, frame_length=frame_length, hop_length=hop)
+        else:
+            rms = librosa.feature.rms(y=self.y, frame_length=frame_length, hop_length=hop)[0]
         rms_db = 20 * np.log10(rms + 1e-10)
-        return float(np.percentile(rms_db, 5))
+        self._noise_floor = float(np.percentile(rms_db, 5))
+        return self._noise_floor
 
     def _grade(self, score: int) -> str:
         if score >= 90:
