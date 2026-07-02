@@ -5,6 +5,43 @@ interface SpectrogramHeatmapProps {
   spectrogram: SpectrogramData
 }
 
+function getDisplayMaxFrequency(frequencies: number[], magnitudeDb: number[][]): number {
+  const nyquist = frequencies[frequencies.length - 1] ?? 0
+  const minReadableMax = Math.min(30000, nyquist)
+  const hardMax = Math.min(48000, nyquist)
+  const activeThresholdDb = -72
+  const strongTransientDb = -45
+  let highestActiveFreq = minReadableMax
+
+  frequencies.forEach((freq, freqIndex) => {
+    if (freq <= minReadableMax || freq > hardMax) return
+
+    const row = magnitudeDb[freqIndex]
+    if (!row || row.length === 0) return
+
+    const step = Math.max(1, Math.floor(row.length / 300))
+    let maxDb = -Infinity
+    let activeCount = 0
+    let sampledCount = 0
+    for (let i = 0; i < row.length; i += step) {
+      const db = row[i]
+      sampledCount += 1
+      maxDb = Math.max(maxDb, db)
+      if (db >= activeThresholdDb) {
+        activeCount += 1
+      }
+    }
+
+    const activeRatio = sampledCount > 0 ? activeCount / sampledCount : 0
+    if (activeRatio >= 0.015 || maxDb >= strongTransientDb) {
+      highestActiveFreq = freq
+    }
+  })
+
+  const paddedMax = Math.ceil((highestActiveFreq * 1.2) / 1000) * 1000
+  return Math.min(Math.max(paddedMax, minReadableMax), hardMax)
+}
+
 export default function SpectrogramHeatmap({ spectrogram }: SpectrogramHeatmapProps) {
   if (!spectrogram || !spectrogram.frequencies || !spectrogram.times || !spectrogram.magnitude_db) {
     console.error('SpectrogramHeatmap: invalid data', spectrogram)
@@ -16,12 +53,12 @@ export default function SpectrogramHeatmap({ spectrogram }: SpectrogramHeatmapPr
   const { frequencies, times, magnitude_db } = spectrogram
 
   // Downsample to prevent browser crash (max ~40k data points)
-  const MAX_DISPLAY_FREQ_HZ = 30000
+  const maxDisplayFreqHz = getDisplayMaxFrequency(frequencies, magnitude_db)
   const MAX_TIME = 200
   const MAX_FREQ = 200
   const visibleFreqs = frequencies
     .map((freq, index) => ({ freq, index }))
-    .filter(({ freq }) => freq <= MAX_DISPLAY_FREQ_HZ)
+    .filter(({ freq }) => freq <= maxDisplayFreqHz)
   const timeStep = Math.max(1, Math.floor(times.length / MAX_TIME))
   const freqStep = Math.max(1, Math.floor(visibleFreqs.length / MAX_FREQ))
   const dTimes = times.filter((_, i) => i % timeStep === 0)
