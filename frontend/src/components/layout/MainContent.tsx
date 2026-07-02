@@ -1,12 +1,14 @@
+import { lazy, Suspense } from 'react'
 import type { ActiveModule, FullAnalysisResponse } from '../../types/analysis'
-import QualityDetection from '../quality/QualityDetection'
-import SpectrumAnalyzer from '../spectrum/SpectrumAnalyzer'
-import SpectrogramHeatmap from '../spectrum/SpectrogramHeatmap'
-import FrequencyDistributionChart from '../spectrum/FrequencyDistribution'
-import WaveformDisplay from '../waveform/WaveformDisplay'
-import ChannelAnalysis from '../channel/ChannelAnalysis'
 import AudioInfo from '../audioinfo/AudioInfo'
 import ErrorBoundary from '../ErrorBoundary'
+
+const QualityDetection = lazy(() => import('../quality/QualityDetection'))
+const SpectrumAnalyzer = lazy(() => import('../spectrum/SpectrumAnalyzer'))
+const SpectrogramHeatmap = lazy(() => import('../spectrum/SpectrogramHeatmap'))
+const FrequencyDistributionChart = lazy(() => import('../spectrum/FrequencyDistribution'))
+const WaveformDisplay = lazy(() => import('../waveform/WaveformDisplay'))
+const ChannelAnalysis = lazy(() => import('../channel/ChannelAnalysis'))
 
 interface MainContentProps {
   activeModule: ActiveModule
@@ -20,6 +22,14 @@ const placeholders: Record<ActiveModule, { title: string; icon: string }> = {
   waveform: { title: '波形显示', icon: '🔊' },
   channel: { title: '声道分析', icon: '🔀' },
   info: { title: '音频信息', icon: 'ℹ️' },
+}
+
+function ModuleLoading() {
+  return (
+    <div className="surface rounded-lg p-5 text-sm" style={{ color: 'var(--text-muted)' }}>
+      加载分析视图...
+    </div>
+  )
 }
 
 export default function MainContent({ activeModule, analysisData }: MainContentProps) {
@@ -43,17 +53,21 @@ export default function MainContent({ activeModule, analysisData }: MainContentP
     <main className="flex-1 overflow-auto p-5">
       {activeModule === 'quality' && (
         <ErrorBoundary moduleName="质量检测">
-          <QualityDetection quality={analysisData.quality} />
+          <Suspense fallback={<ModuleLoading />}>
+            <QualityDetection quality={analysisData.quality} />
+          </Suspense>
         </ErrorBoundary>
       )}
 
       {activeModule === 'spectrum' && analysisData.spectrum && (
         <ErrorBoundary moduleName="频谱分析">
-          <div className="flex flex-col gap-5">
-            <SpectrumAnalyzer spectrum={analysisData.spectrum.spectrum} />
-            <SpectrogramHeatmap spectrogram={analysisData.spectrum.spectrogram} />
-            <FrequencyDistributionChart distribution={analysisData.spectrum.frequency_distribution} />
-          </div>
+          <Suspense fallback={<ModuleLoading />}>
+            <div className="flex flex-col gap-5">
+              <SpectrumAnalyzer spectrum={analysisData.spectrum.spectrum} />
+              <SpectrogramHeatmap spectrogram={analysisData.spectrum.spectrogram} />
+              <FrequencyDistributionChart distribution={analysisData.spectrum.frequency_distribution} />
+            </div>
+          </Suspense>
         </ErrorBoundary>
       )}
 
@@ -65,13 +79,17 @@ export default function MainContent({ activeModule, analysisData }: MainContentP
 
       {activeModule === 'waveform' && analysisData.waveform && (
         <ErrorBoundary moduleName="波形显示">
-          <WaveformDisplay waveform={analysisData.waveform} />
+          <Suspense fallback={<ModuleLoading />}>
+            <WaveformDisplay waveform={analysisData.waveform} />
+          </Suspense>
         </ErrorBoundary>
       )}
 
       {activeModule === 'channel' && analysisData.channel && (
         <ErrorBoundary moduleName="声道分析">
-          <ChannelAnalysis channel={analysisData.channel} />
+          <Suspense fallback={<ModuleLoading />}>
+            <ChannelAnalysis channel={analysisData.channel} />
+          </Suspense>
         </ErrorBoundary>
       )}
 
