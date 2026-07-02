@@ -8,7 +8,7 @@ interface SpectrogramHeatmapProps {
 function getDisplayMaxFrequency(frequencies: number[], magnitudeDb: number[][]): number {
   const nyquist = frequencies[frequencies.length - 1] ?? 0
   const minReadableMax = Math.min(30000, nyquist)
-  const hardMax = Math.min(48000, nyquist)
+  const hardMax = Math.min(72000, nyquist)
   const activeThresholdDb = -72
   const strongTransientDb = -45
   let highestActiveFreq = minReadableMax
