@@ -77,11 +77,18 @@ class QualityAnalyzer:
         if y_stereo.ndim == 1:
             return 75
         l, r = y_stereo[0], y_stereo[1]
-        l_rms = np.sqrt(np.mean(l ** 2))
-        r_rms = np.sqrt(np.mean(r ** 2))
+        l_rms = np.sqrt(float(np.dot(l, l)) / len(l)) if len(l) else 0.0
+        r_rms = np.sqrt(float(np.dot(r, r)) / len(r)) if len(r) else 0.0
         balance_diff = abs(20 * np.log10(l_rms / r_rms)) if r_rms > 0 else 0
         balance_score = max(0, 100 - balance_diff * 20)
-        corr = np.corrcoef(l, r)[0, 1]
+        n = len(l)
+        sum_l = float(np.sum(l))
+        sum_r = float(np.sum(r))
+        covariance = float(np.dot(l, r)) - (sum_l * sum_r / n)
+        variance_l = float(np.dot(l, l)) - (sum_l * sum_l / n)
+        variance_r = float(np.dot(r, r)) - (sum_r * sum_r / n)
+        corr_denominator = np.sqrt(max(variance_l, 0.0) * max(variance_r, 0.0))
+        corr = float(covariance / corr_denominator) if corr_denominator > 0 else 0.0
         stereo_score = min(100, max(0, (1 - abs(corr - 0.5)) * 100))
         return round(balance_score * 0.5 + stereo_score * 0.5)
 

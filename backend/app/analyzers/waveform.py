@@ -53,6 +53,15 @@ class WaveformAnalyzer:
         }
 
     def _detect_clipping(self, y: np.ndarray, sr: int) -> list:
+        if self.context is not None:
+            return [
+                {
+                    "start": round(float(region["start_sample"] / sr), 3),
+                    "end": round(float(region["end_sample"] / sr), 3),
+                }
+                for region in self.context.clipping_regions()
+            ]
+
         threshold = 0.999
         clip_mask = np.abs(y) >= threshold
         starts, ends = true_runs(clip_mask, min_length=3)

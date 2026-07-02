@@ -23,6 +23,12 @@ def true_runs(mask: np.ndarray, min_length: int = 1) -> tuple[np.ndarray, np.nda
     return starts[keep], ends[keep]
 
 
+def _iter_chunks(y: np.ndarray, chunk_size: int = 1_000_000):
+    for start in range(0, len(y), chunk_size):
+        end = min(start + chunk_size, len(y))
+        yield start, end, y[start:end]
+
+
 @dataclass
 class AnalysisContext:
     file_path: str
@@ -32,6 +38,7 @@ class AnalysisContext:
     _stft_cache: Dict[Tuple[int, int, int], np.ndarray] = field(default_factory=dict)
     _rms_cache: Dict[Tuple[int, int, int], np.ndarray] = field(default_factory=dict)
     _stats: Optional[dict] = None
+    _clipping_regions: Optional[list[dict]] = None
 
     @classmethod
     def from_file(cls, file_path: str) -> "AnalysisContext":
@@ -90,23 +97,55 @@ class AnalysisContext:
             return self._stats
 
         y = self.mono
-        abs_y = np.abs(y)
-        peak = float(np.max(abs_y)) if len(abs_y) else 0.0
+        total = len(y)
+        peak = 0.0
+        square_sum = 0.0
+        clip_samples = 0
+        clip_count = 0
+        clip_run_start = None
+        clip_run_length = 0
+        hist = np.zeros(2048, dtype=np.int64)
+        hist_min = 0.001
+        hist_max = 1.0
+
+        for start, _end, chunk in _iter_chunks(y):
+            abs_chunk = np.abs(chunk)
+            if len(abs_chunk):
+                peak = max(peak, float(np.max(abs_chunk)))
+                square_sum += float(np.dot(chunk, chunk))
+
+            hist += np.histogram(abs_chunk, bins=len(hist), range=(hist_min, hist_max))[0]
+
+            clip_mask = abs_chunk >= 0.999
+            clip_samples += int(np.count_nonzero(clip_mask))
+            for offset in np.flatnonzero(clip_mask):
+                index = start + int(offset)
+                if clip_run_start is None or index != clip_run_start + clip_run_length:
+                    if clip_run_length >= 3:
+                        clip_count += 1
+                    clip_run_start = index
+                    clip_run_length = 1
+                else:
+                    clip_run_length += 1
+
+        if clip_run_length >= 3:
+            clip_count += 1
+
         peak_db = 20 * np.log10(peak) if peak > 0 else -np.inf
 
-        square_sum = float(np.dot(y, y))
-        rms = np.sqrt(square_sum / len(y)) if len(y) else 0.0
+        rms = np.sqrt(square_sum / total) if total else 0.0
         rms_db = 20 * np.log10(rms) if rms > 0 else -np.inf
 
-        nonzero = abs_y > 0.001
-        if np.any(nonzero):
-            noise_floor = 20 * np.log10(np.percentile(abs_y[nonzero], 5))
+        hist_total = int(hist.sum())
+        if hist_total:
+            target = max(1, int(np.ceil(hist_total * 0.05)))
+            bin_index = int(np.searchsorted(np.cumsum(hist), target))
+            noise_amp = hist_min + (bin_index + 0.5) * ((hist_max - hist_min) / len(hist))
+            noise_floor = 20 * np.log10(noise_amp)
         else:
             noise_floor = -np.inf
 
-        clip_mask = abs_y >= 0.999
-        clip_starts, _clip_ends = true_runs(clip_mask, min_length=3)
-        clip_ratio_percent = float(np.sum(clip_mask) / len(y) * 100) if len(y) else 0.0
+        clip_ratio_percent = float(clip_samples / total * 100) if total else 0.0
 
         dynamic_range = peak_db - noise_floor if noise_floor > -np.inf else 0
         self._stats = {
@@ -115,9 +154,35 @@ class AnalysisContext:
             "noise_floor_db": float(noise_floor),
             "dynamic_range_db": round(float(dynamic_range), 2),
             "clipping": {
-                "detected": len(clip_starts) > 0,
-                "clip_count": int(len(clip_starts)),
+                "detected": clip_count > 0,
+                "clip_count": int(clip_count),
                 "clip_ratio_percent": round(clip_ratio_percent, 4),
             },
         }
         return self._stats
+
+    def clipping_regions(self, threshold: float = 0.999, min_length: int = 3) -> list[dict]:
+        if self._clipping_regions is not None:
+            return self._clipping_regions
+
+        regions = []
+        run_start = None
+        run_length = 0
+        y = self.mono
+        for start, _end, chunk in _iter_chunks(y):
+            clip_offsets = np.flatnonzero(np.abs(chunk) >= threshold)
+            for offset in clip_offsets:
+                index = start + int(offset)
+                if run_start is None or index != run_start + run_length:
+                    if run_length >= min_length:
+                        regions.append({"start_sample": run_start, "end_sample": run_start + run_length})
+                    run_start = index
+                    run_length = 1
+                else:
+                    run_length += 1
+
+        if run_length >= min_length:
+            regions.append({"start_sample": run_start, "end_sample": run_start + run_length})
+
+        self._clipping_regions = regions
+        return regions
