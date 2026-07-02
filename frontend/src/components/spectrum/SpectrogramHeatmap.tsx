@@ -16,7 +16,7 @@ export default function SpectrogramHeatmap({ spectrogram }: SpectrogramHeatmapPr
   const { frequencies, times, magnitude_db } = spectrogram
 
   // Downsample to prevent browser crash (max ~40k data points)
-  const MAX_DISPLAY_FREQ_HZ = 24000
+  const MAX_DISPLAY_FREQ_HZ = 30000
   const MAX_TIME = 200
   const MAX_FREQ = 200
   const visibleFreqs = frequencies
