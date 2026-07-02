@@ -56,9 +56,9 @@ class ChannelAnalyzer:
         n_fft = 4096
         S = np.abs(librosa.stft(y, n_fft=n_fft))
         mag = np.mean(S, axis=1)
-        mag_db = 20 * np.log10(mag + 1e-10)
+        mag_db = librosa.amplitude_to_db(mag, ref=np.max)
         freqs = librosa.fft_frequencies(sr=sr, n_fft=n_fft)
         return {
             "frequencies": freqs.tolist(),
-            "magnitude_db": mag_db.tolist(),
+            "magnitude_db": np.round(mag_db, 2).tolist(),
         }

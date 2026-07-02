@@ -18,14 +18,14 @@ class SpectrumAnalyzer:
         n_fft = 4096
         S = np.abs(librosa.stft(y, n_fft=n_fft))
         mag = np.mean(S, axis=1)
-        mag_db = 20 * np.log10(mag + 1e-10)
+        mag_db = librosa.amplitude_to_db(mag, ref=np.max)
         peak_hold = np.max(S, axis=1)
-        peak_hold_db = 20 * np.log10(peak_hold + 1e-10)
+        peak_hold_db = librosa.amplitude_to_db(peak_hold, ref=np.max)
         freqs = librosa.fft_frequencies(sr=sr, n_fft=n_fft)
         return {
             "frequencies": freqs.tolist(),
-            "magnitude_db": mag_db.tolist(),
-            "peak_hold_db": peak_hold_db.tolist(),
+            "magnitude_db": np.round(mag_db, 2).tolist(),
+            "peak_hold_db": np.round(peak_hold_db, 2).tolist(),
         }
 
     def _spectrogram(self, y: np.ndarray, sr: int) -> dict:
