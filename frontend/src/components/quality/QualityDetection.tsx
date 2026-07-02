@@ -6,14 +6,14 @@ interface QualityDetectionProps {
   quality: QualityResponse
 }
 
-const SUB_SCORE_LABELS: Array<{ key: keyof QualityResponse['sub_scores']; label: string }> = [
-  { key: 'bitrate', label: '码率评分' },
-  { key: 'integrity', label: '文件完整度' },
-  { key: 'quality_detection', label: '质量检测' },
-  { key: 'channel', label: '声道评分' },
-  { key: 'spectral', label: '频谱质量' },
-  { key: 'dynamic_range', label: '动态范围' },
-  { key: 'distortion', label: '失真程度' },
+const SUB_SCORE_LABELS: Array<{ key: keyof QualityResponse['sub_scores']; label: string; tip: string }> = [
+  { key: 'bitrate', label: '码率评分', tip: '码率越高，音频细节越丰富。320kbps 以上为高品质，128kbps 以下会有明显压缩感' },
+  { key: 'integrity', label: '文件完整度', tip: '文件头、索引表、帧数据是否完整。损坏的文件可能出现爆音、卡顿或无法播放' },
+  { key: 'quality_detection', label: '质量检测', tip: '检测削波（音量过大导致的失真）和噪声底水平。削波会产生刺耳的杂音' },
+  { key: 'channel', label: '声道评分', tip: '左右声道的平衡度和立体声分离度。声道不平衡会导致声音偏向一侧' },
+  { key: 'spectral', label: '频谱质量', tip: '高频保留程度。高频丰富则声音明亮通透，高频缺失则声音沉闷模糊' },
+  { key: 'dynamic_range', label: '动态范围', tip: '最响和最轻声音的差距。动态范围大则音乐有起伏感，太小则声音扁平无层次' },
+  { key: 'distortion', label: '失真程度', tip: '削波和噪声导致的失真程度。失真越低，声音越干净自然' },
 ]
 
 function gradeColor(score: number): string {
@@ -82,12 +82,12 @@ export default function QualityDetection({ quality }: QualityDetectionProps) {
 
         {/* Right: Sub-score bars */}
         <div className="flex-1 grid gap-3">
-          {SUB_SCORE_LABELS.map(({ key, label }) => {
+          {SUB_SCORE_LABELS.map(({ key, label, tip }) => {
             const value = quality.sub_scores[key]
             const barColor = gradeColor(value)
             return (
-              <div key={key} className="flex items-center gap-3">
-                <div className="text-sm w-24 shrink-0" style={{ color: '#8b949e' }}>{label}</div>
+              <div key={key} className="flex items-center gap-3 group relative">
+                <div className="text-sm w-24 shrink-0 cursor-help" style={{ color: '#8b949e' }} title={tip}>{label} ⓘ</div>
                 <div className="flex-1 h-3 rounded-full overflow-hidden" style={{ backgroundColor: '#30363d' }}>
                   <div
                     className="h-full rounded-full transition-all duration-500"

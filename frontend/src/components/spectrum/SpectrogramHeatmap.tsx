@@ -95,7 +95,10 @@ export default function SpectrogramHeatmap({ spectrogram }: SpectrogramHeatmapPr
 
   return (
     <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}>
-      <h3 className="text-base font-semibold mb-3" style={{ color: '#e6edf3' }}>声谱图</h3>
+      <h3 className="text-base font-semibold mb-1" style={{ color: '#e6edf3' }}>声谱图</h3>
+      <p className="text-xs mb-3" style={{ color: '#8b949e' }}>
+        横轴是时间，纵轴是频率，颜色代表音量（蓝=轻，红=响）。可以直观看到音乐随时间的频率变化，例如鼓点在低频的规律脉冲。
+      </p>
       <ResponsiveChart option={option} height={350} />
     </div>
   )

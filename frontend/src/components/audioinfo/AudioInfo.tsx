@@ -7,12 +7,13 @@ interface AudioInfoProps {
 interface InfoRowProps {
   label: string
   value: string | number
+  tip?: string
 }
 
-function InfoRow({ label, value }: InfoRowProps) {
+function InfoRow({ label, value, tip }: InfoRowProps) {
   return (
     <div className="flex justify-between py-1 text-sm" style={{ borderBottom: '1px solid #21262d' }}>
-      <span style={{ color: '#8b949e' }}>{label}</span>
+      <span style={{ color: '#8b949e' }} title={tip}>{label}{tip ? ' ⓘ' : ''}</span>
       <span style={{ color: '#e6edf3' }}>{value}</span>
     </div>
   )
@@ -75,11 +76,11 @@ export default function AudioInfo({ basicInfo }: AudioInfoProps) {
         {/* Audio Parameters */}
         <div style={cardStyle()}>
           <div style={cardTitleStyle()}>音频参数</div>
-          <InfoRow label="采样率" value={`${audio.sample_rate_hz} Hz`} />
-          <InfoRow label="位深" value={`${audio.bit_depth} bit`} />
-          <InfoRow label="声道" value={audio.channel_mode} />
-          <InfoRow label="比特率" value={formatBitrate(audio.bitrate_kbps)} />
-          <InfoRow label="比特率模式" value={audio.bitrate_mode} />
+          <InfoRow label="采样率" value={`${audio.sample_rate_hz} Hz`} tip="每秒采集的样本数。CD 标准 44100Hz，越高则能记录的频率范围越广" />
+          <InfoRow label="位深" value={`${audio.bit_depth} bit`} tip="每个样本的精度。CD 为 16bit，24bit 为专业级，越高则动态范围越大" />
+          <InfoRow label="声道" value={audio.channel_mode} tip="单声道=一个声道，立体声=左右两个声道" />
+          <InfoRow label="比特率" value={formatBitrate(audio.bitrate_kbps)} tip="每秒的数据量。越高音质越好，文件也越大。MP3 最高 320kbps，无损约 1000+" />
+          <InfoRow label="比特率模式" value={audio.bitrate_mode} tip="CBR=固定码率（稳定），VBR=可变码率（更高效）" />
         </div>
 
         {/* Timing */}
@@ -92,9 +93,9 @@ export default function AudioInfo({ basicInfo }: AudioInfoProps) {
         {/* Loudness */}
         <div style={cardStyle()}>
           <div style={cardTitleStyle()}>响度信息</div>
-          <InfoRow label="峰值" value={`${loudness.peak_db.toFixed(1)} dB`} />
-          <InfoRow label="RMS" value={`${loudness.rms_db.toFixed(1)} dB`} />
-          <InfoRow label="动态范围" value={`${loudness.dynamic_range_db.toFixed(1)} dB`} />
+          <InfoRow label="峰值" value={`${loudness.peak_db.toFixed(1)} dB`} tip="音频中最响的瞬间。接近 0dB 表示音量已到极限，过度会削波" />
+          <InfoRow label="RMS" value={`${loudness.rms_db.toFixed(1)} dB`} tip="平均响度水平。越接近 0 越响，-14dB 左右是流行音乐常见水平" />
+          <InfoRow label="动态范围" value={`${loudness.dynamic_range_db.toFixed(1)} dB`} tip="最响和最轻的差距。越大音乐起伏感越强，太小则声音扁平" />
         </div>
 
         {/* Tags */}

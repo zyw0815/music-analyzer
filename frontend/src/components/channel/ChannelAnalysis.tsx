@@ -86,7 +86,10 @@ export default function ChannelAnalysis({ channel }: ChannelAnalysisProps) {
   return (
     <div className="flex flex-col gap-5">
       <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}>
-        <h3 className="text-base font-semibold mb-3" style={{ color: '#e6edf3' }}>声道分析</h3>
+        <h3 className="text-base font-semibold mb-1" style={{ color: '#e6edf3' }}>声道分析</h3>
+        <p className="text-xs mb-3" style={{ color: '#8b949e' }}>
+          对比左右声道的频率响应。蓝线=左声道，橙线=右声道。两条线越接近说明声道越平衡。
+        </p>
         {is_mono && (
           <div className="mb-3 px-3 py-2 rounded text-sm" style={{ backgroundColor: '#0d1117', color: '#d29922', border: '1px solid #30363d' }}>
             此文件为单声道
