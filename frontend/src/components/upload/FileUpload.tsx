@@ -14,6 +14,7 @@ export default function FileUpload({ onUploadComplete, onError }: FileUploadProp
   const [dragOver, setDragOver] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [progress, setProgress] = useState(0)
+  const [phase, setPhase] = useState<'idle' | 'uploading' | 'analyzing'>('idle')
   const [uploading, setUploading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -37,14 +38,19 @@ export default function FileUpload({ onUploadComplete, onError }: FileUploadProp
     setSelectedFile(file)
     setUploading(true)
     setProgress(0)
+    setPhase('uploading')
     try {
-      const data = await analyzeFile(file, setProgress)
+      const data = await analyzeFile(file, (percent) => {
+        setProgress(percent)
+        if (percent >= 100) setPhase('analyzing')
+      })
       onUploadComplete(data)
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : '上传失败，请重试'
       onError(msg)
     } finally {
       setUploading(false)
+      setPhase('idle')
     }
   }
 
@@ -118,15 +124,24 @@ export default function FileUpload({ onUploadComplete, onError }: FileUploadProp
           </div>
           {uploading && (
             <div className="meter-track w-full h-2 rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-300"
-                style={{ width: `${progress}%`, backgroundColor: 'var(--accent-strong)' }}
-              />
+              {progress > 0 ? (
+                <div
+                  className="h-full rounded-full transition-all duration-300"
+                  style={{ width: `${progress}%`, backgroundColor: 'var(--accent-strong)' }}
+                />
+              ) : (
+                <div
+                  className="indeterminate-progress h-full rounded-full"
+                  style={{ backgroundColor: 'var(--accent-strong)' }}
+                />
+              )}
             </div>
           )}
           {uploading && (
             <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-              分析中... {progress}%
+              {phase === 'uploading' && progress > 0 && `上传中... ${progress}%`}
+              {phase === 'uploading' && progress === 0 && '上传中...'}
+              {phase === 'analyzing' && '后端分析中，大文件可能需要几分钟...'}
             </div>
           )}
         </div>

@@ -94,6 +94,16 @@ button, input {
   border: 1px solid var(--border);
 }
 
+@keyframes indeterminateProgress {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(320%); }
+}
+
+.indeterminate-progress {
+  width: 35%;
+  animation: indeterminateProgress 1.2s ease-in-out infinite;
+}
+
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg-muted); }
 ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
