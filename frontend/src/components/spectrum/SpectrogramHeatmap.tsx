@@ -28,8 +28,8 @@ export default function SpectrogramHeatmap({ spectrogram }: SpectrogramHeatmapPr
     for (let f = 0; f < dFreqs.length; f++) {
       const origT = t * timeStep
       const origF = f * freqStep
-      if (magnitude_db[origT] && magnitude_db[origT][origF] !== undefined) {
-        data.push([t, f, magnitude_db[origT][origF]])
+      if (magnitude_db[origF] && magnitude_db[origF][origT] !== undefined) {
+        data.push([t, f, magnitude_db[origF][origT]])
       }
     }
   }
@@ -50,7 +50,7 @@ export default function SpectrogramHeatmap({ spectrogram }: SpectrogramHeatmapPr
     },
     grid: {
       left: 70,
-      right: 40,
+      right: 90,
       top: 20,
       bottom: 40,
     },
@@ -75,8 +75,10 @@ export default function SpectrogramHeatmap({ spectrogram }: SpectrogramHeatmapPr
       max: 0,
       calculable: false,
       orient: 'vertical' as const,
-      right: 0,
+      right: 12,
       top: 'center',
+      align: 'right' as const,
+      textGap: 8,
       inRange: {
         color: ['#0c1445', '#1a3a8a', '#2563eb', '#f59e0b', '#ef4444'],
       },
