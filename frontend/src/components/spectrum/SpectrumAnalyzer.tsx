@@ -97,7 +97,10 @@ export default function SpectrumAnalyzer({ spectrum }: SpectrumAnalyzerProps) {
 
   return (
     <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}>
-      <h3 className="text-base font-semibold mb-3" style={{ color: '#e6edf3' }}>频谱分析</h3>
+      <h3 className="text-base font-semibold mb-1" style={{ color: '#e6edf3' }}>频谱分析</h3>
+      <p className="text-xs mb-3" style={{ color: '#8b949e' }}>
+        显示各频率的音量大小。横轴是频率（低音→高音），纵轴是音量。曲线越高说明该频率越响，高频区域丰富则声音明亮，缺失则沉闷。
+      </p>
       <ResponsiveChart option={option} height={350} />
     </div>
   )

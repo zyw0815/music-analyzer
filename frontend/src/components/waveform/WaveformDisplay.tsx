@@ -151,7 +151,10 @@ export default function WaveformDisplay({ waveform }: WaveformDisplayProps) {
 
   return (
     <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}>
-      <h3 className="text-base font-semibold mb-3" style={{ color: '#e6edf3' }}>波形显示</h3>
+      <h3 className="text-base font-semibold mb-1" style={{ color: '#e6edf3' }}>波形显示</h3>
+      <p className="text-xs mb-3" style={{ color: '#8b949e' }}>
+        显示音频信号的振幅随时间的变化。波形越高表示音量越大。红色包络线表示整体音量趋势。<span style={{ color: '#f85149' }}>红色区域</span>是削波（音量过大导致失真），<span style={{ color: '#8b949e' }}>灰色区域</span>是静音段。
+      </p>
       <ResponsiveChart option={option} height={350} />
       <div className="flex gap-4 mt-2 text-xs" style={{ color: '#8b949e' }}>
         <span><span className="inline-block w-3 h-0.5 mr-1" style={{ backgroundColor: '#58a6ff' }} />波形</span>

@@ -78,7 +78,10 @@ export default function MidSideSpectrum({ mid, side }: MidSideSpectrumProps) {
 
   return (
     <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}>
-      <h3 className="text-base font-semibold mb-3" style={{ color: '#e6edf3' }}>Mid/Side 频谱</h3>
+      <h3 className="text-base font-semibold mb-1" style={{ color: '#e6edf3' }}>Mid/Side 频谱</h3>
+      <p className="text-xs mb-3" style={{ color: '#8b949e' }}>
+        <strong>Mid</strong>=中间声音（人声、贝斯等居中元素），<strong>Side</strong>=立体声宽度（环境声、左右差异）。Side 越强立体声感越强。
+      </p>
       <ResponsiveChart option={option} height={300} />
     </div>
   )

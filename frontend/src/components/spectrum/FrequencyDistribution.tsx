@@ -67,7 +67,10 @@ export default function FrequencyDistributionChart({ distribution }: FrequencyDi
 
   return (
     <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}>
-      <h3 className="text-base font-semibold mb-3" style={{ color: '#e6edf3' }}>频率分布</h3>
+      <h3 className="text-base font-semibold mb-1" style={{ color: '#e6edf3' }}>频率分布</h3>
+      <p className="text-xs mb-3" style={{ color: '#8b949e' }}>
+        5 个频段的能量分布：<strong>20-60Hz</strong> 超低音（震感）、<strong>60-250Hz</strong> 低音（贝斯/鼓）、<strong>250-2kHz</strong> 中音（人声/乐器）、<strong>2k-6kHz</strong> 中高音（清晰度）、<strong>6k-20kHz</strong> 高音（空气感/细节）。
+      </p>
       <ResponsiveChart option={option} height={280} />
     </div>
   )
