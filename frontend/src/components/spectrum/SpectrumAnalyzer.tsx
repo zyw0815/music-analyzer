@@ -1,5 +1,6 @@
 import ResponsiveChart from '../ResponsiveChart'
 import type { SpectrumData } from '../../types/analysis'
+import { cssVar } from '../../theme/cssVars'
 
 interface SpectrumAnalyzerProps {
   spectrum: SpectrumData
@@ -8,19 +9,25 @@ interface SpectrumAnalyzerProps {
 export default function SpectrumAnalyzer({ spectrum }: SpectrumAnalyzerProps) {
   if (!spectrum || !spectrum.frequencies || !spectrum.magnitude_db) {
     console.error('SpectrumAnalyzer: invalid data', spectrum)
-    return <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d', color: '#f85149' }}>
+    return <div className="surface rounded-lg p-5" style={{ color: 'var(--danger)' }}>
       频谱数据加载失败
     </div>
   }
 
   const { frequencies, magnitude_db, peak_hold_db } = spectrum
+  const text = cssVar('--text', '#edf3fb')
+  const muted = cssVar('--text-muted', '#98a6b8')
+  const border = cssVar('--border', '#2a3545')
+  const grid = cssVar('--chart-grid', '#223044')
+  const tooltip = cssVar('--chart-tooltip', '#151d28')
+  const accent = cssVar('--accent', '#4f8cff')
 
   const option = {
     tooltip: {
       trigger: 'axis' as const,
-      backgroundColor: '#1c2128',
-      borderColor: '#30363d',
-      textStyle: { color: '#e6edf3', fontSize: 12 },
+      backgroundColor: tooltip,
+      borderColor: border,
+      textStyle: { color: text, fontSize: 12 },
       formatter: (params: Array<{ seriesName: string; value: [number, number]; marker: string }>) => {
         const freq = params[0]?.value[0]
         const lines = params
@@ -38,25 +45,25 @@ export default function SpectrumAnalyzer({ spectrum }: SpectrumAnalyzerProps) {
     xAxis: {
       type: 'log' as const,
       name: '频率',
-      nameTextStyle: { color: '#8b949e' },
+      nameTextStyle: { color: muted },
       min: 20,
       max: 20000,
       axisLabel: {
-        color: '#8b949e',
+        color: muted,
         formatter: (v: number) => (v >= 1000 ? `${v / 1000}k` : `${v}`),
       },
-      axisLine: { lineStyle: { color: '#30363d' } },
-      splitLine: { lineStyle: { color: '#21262d' } },
+      axisLine: { lineStyle: { color: border } },
+      splitLine: { lineStyle: { color: grid } },
     },
     yAxis: {
       type: 'value' as const,
       name: 'dB',
-      nameTextStyle: { color: '#8b949e' },
+      nameTextStyle: { color: muted },
       min: -90,
       max: 0,
-      axisLabel: { color: '#8b949e' },
-      axisLine: { lineStyle: { color: '#30363d' } },
-      splitLine: { lineStyle: { color: '#21262d' } },
+      axisLabel: { color: muted },
+      axisLine: { lineStyle: { color: border } },
+      splitLine: { lineStyle: { color: grid } },
     },
     series: [
       {
@@ -65,7 +72,7 @@ export default function SpectrumAnalyzer({ spectrum }: SpectrumAnalyzerProps) {
         data: frequencies.map((f, i) => [f, magnitude_db[i]]),
         smooth: true,
         symbol: 'none',
-        lineStyle: { color: '#58a6ff', width: 2 },
+        lineStyle: { color: accent, width: 2 },
         areaStyle: {
           color: {
             type: 'linear' as const,
@@ -74,8 +81,8 @@ export default function SpectrumAnalyzer({ spectrum }: SpectrumAnalyzerProps) {
             x2: 0,
             y2: 1,
             colorStops: [
-              { offset: 0, color: 'rgba(88,166,255,0.3)' },
-              { offset: 1, color: 'rgba(88,166,255,0.02)' },
+              { offset: 0, color: 'rgba(79,140,255,0.3)' },
+              { offset: 1, color: 'rgba(79,140,255,0.02)' },
             ],
           },
         },
@@ -88,7 +95,7 @@ export default function SpectrumAnalyzer({ spectrum }: SpectrumAnalyzerProps) {
               data: frequencies.map((f, i) => [f, peak_hold_db[i]]),
               smooth: true,
               symbol: 'none',
-              lineStyle: { color: '#58a6ff', width: 1, opacity: 0.4 },
+              lineStyle: { color: accent, width: 1, opacity: 0.4 },
             },
           ]
         : []),
@@ -96,9 +103,9 @@ export default function SpectrumAnalyzer({ spectrum }: SpectrumAnalyzerProps) {
   }
 
   return (
-    <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}>
-      <h3 className="text-base font-semibold mb-1" style={{ color: '#e6edf3' }}>频谱分析</h3>
-      <p className="text-xs mb-3" style={{ color: '#8b949e' }}>
+    <div className="surface rounded-lg p-5">
+      <h3 className="text-base font-semibold mb-1" style={{ color: 'var(--text)' }}>频谱分析</h3>
+      <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>
         显示各频率的音量大小。横轴是频率（低音→高音），纵轴是音量。曲线越高说明该频率越响，高频区域丰富则声音明亮，缺失则沉闷。
       </p>
       <ResponsiveChart option={option} height={350} />

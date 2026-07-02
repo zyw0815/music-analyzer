@@ -24,19 +24,18 @@ export default class ErrorBoundary extends React.Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div
-          className="rounded-lg p-6 flex flex-col items-center justify-center"
-          style={{ backgroundColor: '#161b22', border: '1px solid #30363d', minHeight: 200 }}
+          className="surface rounded-lg p-6 flex flex-col items-center justify-center"
+          style={{ minHeight: 200 }}
         >
-          <div className="text-3xl mb-3">⚠️</div>
-          <div className="text-sm font-medium mb-2" style={{ color: '#f85149' }}>
+          <div className="text-3xl mb-3" style={{ color: 'var(--danger)' }}>!</div>
+          <div className="text-sm font-medium mb-2" style={{ color: 'var(--danger)' }}>
             {this.props.moduleName || '模块'}渲染出错
           </div>
-          <div className="text-xs" style={{ color: '#8b949e' }}>
+          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
             {this.state.error?.message || '未知错误'}
           </div>
           <button
-            className="mt-3 px-3 py-1 rounded text-xs"
-            style={{ backgroundColor: '#21262d', color: '#e6edf3', border: '1px solid #30363d' }}
+            className="theme-button mt-3 px-3 py-1 rounded text-xs cursor-pointer"
             onClick={() => this.setState({ hasError: false, error: null })}
           >
             重试

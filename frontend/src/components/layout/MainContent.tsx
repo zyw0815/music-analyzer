@@ -29,11 +29,10 @@ export default function MainContent({ activeModule, analysisData }: MainContentP
     return (
       <main
         className="flex-1 overflow-auto p-5"
-        style={{ backgroundColor: '#0d1117' }}
       >
-        <div className="flex flex-col items-center justify-center h-full" style={{ color: '#8b949e' }}>
+        <div className="flex flex-col items-center justify-center h-full" style={{ color: 'var(--text-muted)' }}>
           <div className="text-5xl mb-4">{ph.icon}</div>
-          <div className="text-lg mb-1" style={{ color: '#e6edf3' }}>{ph.title}</div>
+          <div className="text-lg mb-1" style={{ color: 'var(--text)' }}>{ph.title}</div>
           <div className="text-sm">请上传音频文件开始分析</div>
         </div>
       </main>
@@ -41,7 +40,7 @@ export default function MainContent({ activeModule, analysisData }: MainContentP
   }
 
   return (
-    <main className="flex-1 overflow-auto p-5" style={{ backgroundColor: '#0d1117' }}>
+    <main className="flex-1 overflow-auto p-5">
       {activeModule === 'quality' && (
         <ErrorBoundary moduleName="质量检测">
           <QualityDetection quality={analysisData.quality} />
@@ -59,7 +58,7 @@ export default function MainContent({ activeModule, analysisData }: MainContentP
       )}
 
       {activeModule === 'spectrum' && !analysisData.spectrum && (
-        <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d', color: '#f85149' }}>
+        <div className="surface rounded-lg p-5" style={{ color: 'var(--danger)' }}>
           频谱数据未加载
         </div>
       )}
@@ -84,14 +83,14 @@ export default function MainContent({ activeModule, analysisData }: MainContentP
 
       {activeModule === 'player' && (
         <div
-          className="rounded-lg p-6 flex flex-col items-center justify-center"
-          style={{ backgroundColor: '#161b22', border: '1px solid #30363d', minHeight: 300 }}
+          className="surface rounded-lg p-6 flex flex-col items-center justify-center"
+          style={{ minHeight: 300 }}
         >
-          <div className="text-5xl mb-4">🎵</div>
-          <div className="text-lg font-semibold mb-2" style={{ color: '#e6edf3' }}>
+          <div className="text-5xl mb-4" style={{ color: 'var(--accent)' }}>♫</div>
+          <div className="text-lg font-semibold mb-2" style={{ color: 'var(--text)' }}>
             {analysisData.basic_info.file.name}
           </div>
-          <div className="text-sm" style={{ color: '#8b949e' }}>
+          <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
             使用顶栏播放器控制播放
           </div>
         </div>

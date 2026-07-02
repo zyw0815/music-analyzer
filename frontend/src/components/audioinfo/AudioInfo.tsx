@@ -16,13 +16,13 @@ interface InfoRowProps {
 
 function InfoRow({ label, value, tip, activeTip, onTipEnter, onTipLeave }: InfoRowProps) {
   return (
-    <div className="flex justify-between py-1 text-sm" style={{ borderBottom: '1px solid #21262d' }}>
-      <span className="flex items-center gap-1" style={{ color: '#8b949e' }}>
+    <div className="flex justify-between gap-3 py-1.5 text-sm" style={{ borderBottom: '1px solid var(--border)' }}>
+      <span className="flex items-center gap-1 shrink-0" style={{ color: 'var(--text-muted)' }}>
         {label}
         {tip && (
           <span
             className="cursor-help text-xs relative"
-            style={{ color: '#58a6ff' }}
+            style={{ color: 'var(--accent)' }}
             onMouseEnter={() => onTipEnter(label)}
             onMouseLeave={onTipLeave}
           >
@@ -33,13 +33,13 @@ function InfoRow({ label, value, tip, activeTip, onTipEnter, onTipLeave }: InfoR
                 style={{
                   position: 'fixed',
                   zIndex: 9999,
-                  backgroundColor: '#1c2128',
-                  border: '1px solid #30363d',
-                  color: '#e6edf3',
+                  backgroundColor: 'var(--chart-tooltip)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text)',
                   width: 260,
                   marginLeft: 8,
                   marginTop: -8,
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                  boxShadow: 'var(--shadow)',
                 }}
               >
                 {tip}
@@ -48,7 +48,7 @@ function InfoRow({ label, value, tip, activeTip, onTipEnter, onTipLeave }: InfoR
           </span>
         )}
       </span>
-      <span style={{ color: '#e6edf3' }}>{value}</span>
+      <span className="min-w-0 truncate text-right" style={{ color: 'var(--text)' }}>{value}</span>
     </div>
   )
 }
@@ -71,8 +71,8 @@ function formatBitrate(kbps: number | undefined): string {
 
 function cardStyle(): React.CSSProperties {
   return {
-    backgroundColor: '#161b22',
-    border: '1px solid #30363d',
+    backgroundColor: 'var(--bg-panel-strong)',
+    border: '1px solid var(--border)',
     borderRadius: 8,
     padding: 16,
   }
@@ -80,7 +80,7 @@ function cardStyle(): React.CSSProperties {
 
 function cardTitleStyle(): React.CSSProperties {
   return {
-    color: '#e6edf3',
+    color: 'var(--text)',
     fontSize: 14,
     fontWeight: 600,
     marginBottom: 8,
@@ -98,8 +98,8 @@ export default function AudioInfo({ basicInfo }: AudioInfoProps) {
   }
 
   return (
-    <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}>
-      <h3 className="text-base font-semibold mb-4" style={{ color: '#e6edf3' }}>音频信息</h3>
+    <div className="surface rounded-lg p-5">
+      <h3 className="text-base font-semibold mb-4" style={{ color: 'var(--text)' }}>音频信息</h3>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* File Properties */}
@@ -147,7 +147,7 @@ export default function AudioInfo({ basicInfo }: AudioInfoProps) {
               <InfoRow key={key} label={key} value={value} {...infoRowProps} />
             ))
           ) : (
-            <div className="text-sm" style={{ color: '#8b949e' }}>无标签信息</div>
+            <div className="text-sm" style={{ color: 'var(--text-muted)' }}>无标签信息</div>
           )}
         </div>
 

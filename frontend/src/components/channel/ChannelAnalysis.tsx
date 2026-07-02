@@ -2,6 +2,7 @@ import ResponsiveChart from '../ResponsiveChart'
 import type { ChannelResponse } from '../../types/analysis'
 import PhaseCorrelation from './PhaseCorrelation'
 import MidSideSpectrum from './MidSideSpectrum'
+import { cssVar } from '../../theme/cssVars'
 
 interface ChannelAnalysisProps {
   channel: ChannelResponse
@@ -9,14 +10,21 @@ interface ChannelAnalysisProps {
 
 export default function ChannelAnalysis({ channel }: ChannelAnalysisProps) {
   const { left_spectrum, right_spectrum, channel_balance_db, stereo_width, is_mono, phase_correlation } = channel
+  const text = cssVar('--text', '#edf3fb')
+  const muted = cssVar('--text-muted', '#98a6b8')
+  const border = cssVar('--border', '#2a3545')
+  const grid = cssVar('--chart-grid', '#223044')
+  const tooltip = cssVar('--chart-tooltip', '#151d28')
+  const accent = cssVar('--accent', '#4f8cff')
+  const orange = cssVar('--orange', '#ed8f38')
 
   // L/R spectrum overlay
   const lrOption = {
     tooltip: {
       trigger: 'axis' as const,
-      backgroundColor: '#1c2128',
-      borderColor: '#30363d',
-      textStyle: { color: '#e6edf3', fontSize: 12 },
+      backgroundColor: tooltip,
+      borderColor: border,
+      textStyle: { color: text, fontSize: 12 },
       formatter: (params: Array<{ seriesName: string; value: [number, number]; marker: string }>) => {
         const freq = params[0]?.value[0]
         const freqStr = freq >= 1000 ? `${(freq / 1000).toFixed(1)} kHz` : `${freq} Hz`
@@ -28,7 +36,7 @@ export default function ChannelAnalysis({ channel }: ChannelAnalysisProps) {
     },
     legend: {
       data: ['左声道', '右声道'],
-      textStyle: { color: '#8b949e' },
+      textStyle: { color: muted },
       top: 0,
     },
     grid: {
@@ -40,25 +48,25 @@ export default function ChannelAnalysis({ channel }: ChannelAnalysisProps) {
     xAxis: {
       type: 'log' as const,
       name: '频率',
-      nameTextStyle: { color: '#8b949e' },
+      nameTextStyle: { color: muted },
       min: 20,
       max: 20000,
       axisLabel: {
-        color: '#8b949e',
+        color: muted,
         formatter: (v: number) => (v >= 1000 ? `${v / 1000}k` : `${v}`),
       },
-      axisLine: { lineStyle: { color: '#30363d' } },
-      splitLine: { lineStyle: { color: '#21262d' } },
+      axisLine: { lineStyle: { color: border } },
+      splitLine: { lineStyle: { color: grid } },
     },
     yAxis: {
       type: 'value' as const,
       name: 'dB',
-      nameTextStyle: { color: '#8b949e' },
+      nameTextStyle: { color: muted },
       min: -90,
       max: 0,
-      axisLabel: { color: '#8b949e' },
-      axisLine: { lineStyle: { color: '#30363d' } },
-      splitLine: { lineStyle: { color: '#21262d' } },
+      axisLabel: { color: muted },
+      axisLine: { lineStyle: { color: border } },
+      splitLine: { lineStyle: { color: grid } },
     },
     series: [
       {
@@ -67,7 +75,7 @@ export default function ChannelAnalysis({ channel }: ChannelAnalysisProps) {
         data: left_spectrum.frequencies.map((f, i) => [f, left_spectrum.magnitude_db[i]]),
         smooth: true,
         symbol: 'none',
-        lineStyle: { color: '#58a6ff', width: 2 },
+        lineStyle: { color: accent, width: 2 },
       },
       {
         name: '右声道',
@@ -75,7 +83,7 @@ export default function ChannelAnalysis({ channel }: ChannelAnalysisProps) {
         data: right_spectrum.frequencies.map((f, i) => [f, right_spectrum.magnitude_db[i]]),
         smooth: true,
         symbol: 'none',
-        lineStyle: { color: '#f0883e', width: 2 },
+        lineStyle: { color: orange, width: 2 },
       },
     ],
   }
@@ -85,13 +93,13 @@ export default function ChannelAnalysis({ channel }: ChannelAnalysisProps) {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}>
-        <h3 className="text-base font-semibold mb-1" style={{ color: '#e6edf3' }}>声道分析</h3>
-        <p className="text-xs mb-3" style={{ color: '#8b949e' }}>
+      <div className="surface rounded-lg p-5">
+        <h3 className="text-base font-semibold mb-1" style={{ color: 'var(--text)' }}>声道分析</h3>
+        <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>
           对比左右声道的频率响应。蓝线=左声道，橙线=右声道。两条线越接近说明声道越平衡。
         </p>
         {is_mono && (
-          <div className="mb-3 px-3 py-2 rounded text-sm" style={{ backgroundColor: '#0d1117', color: '#d29922', border: '1px solid #30363d' }}>
+          <div className="mb-3 px-3 py-2 rounded text-sm" style={{ backgroundColor: 'var(--bg-muted)', color: 'var(--warning)', border: '1px solid var(--border)' }}>
             此文件为单声道
           </div>
         )}
@@ -99,36 +107,36 @@ export default function ChannelAnalysis({ channel }: ChannelAnalysisProps) {
 
         {/* Channel balance indicator */}
         <div className="mt-4">
-          <div className="flex justify-between text-xs mb-1" style={{ color: '#8b949e' }}>
+          <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--text-muted)' }}>
             <span>左声道</span>
             <span>声道平衡: {channel_balance_db.toFixed(1)} dB</span>
             <span>右声道</span>
           </div>
-          <div className="relative h-2 rounded-full overflow-hidden" style={{ backgroundColor: '#30363d' }}>
+          <div className="meter-track relative h-2 rounded-full overflow-hidden">
             <div
               className="absolute top-0 h-full rounded-full"
               style={{
                 left: `${Math.min(balancePercent, 50)}%`,
                 width: `${Math.abs(balancePercent - 50)}%`,
-                backgroundColor: '#58a6ff',
+                backgroundColor: 'var(--accent)',
               }}
             />
-            <div className="absolute top-0 left-1/2 w-0.5 h-full" style={{ backgroundColor: '#e6edf3', transform: 'translateX(-50%)' }} />
+            <div className="absolute top-0 left-1/2 w-0.5 h-full" style={{ backgroundColor: 'var(--text)', transform: 'translateX(-50%)' }} />
           </div>
         </div>
 
         {/* Stats row */}
-        <div className="flex gap-4 mt-4 text-sm" style={{ color: '#8b949e' }}>
-          <span>立体声宽度: <strong style={{ color: '#e6edf3' }}>{(stereo_width * 100).toFixed(0)}%</strong></span>
-          <span>相位相关: <strong style={{ color: '#e6edf3' }}>{phase_correlation.toFixed(3)}</strong></span>
+        <div className="flex flex-wrap gap-3 mt-4 text-sm" style={{ color: 'var(--text-muted)' }}>
+          <span className="rounded px-3 py-1" style={{ backgroundColor: 'var(--bg-muted)' }}>立体声宽度: <strong style={{ color: 'var(--text)' }}>{(stereo_width * 100).toFixed(0)}%</strong></span>
+          <span className="rounded px-3 py-1" style={{ backgroundColor: 'var(--bg-muted)' }}>相位相关: <strong style={{ color: 'var(--text)' }}>{phase_correlation.toFixed(3)}</strong></span>
         </div>
       </div>
 
-      <div className="flex gap-5 flex-col lg:flex-row">
-        <div className="flex-1">
+      <div className="grid gap-5 lg:grid-cols-[minmax(330px,0.9fr)_minmax(420px,1.1fr)] items-stretch">
+        <div>
           <PhaseCorrelation correlation={phase_correlation} />
         </div>
-        <div className="flex-1">
+        <div>
           <MidSideSpectrum mid={channel.mid_spectrum} side={channel.side_spectrum} />
         </div>
       </div>

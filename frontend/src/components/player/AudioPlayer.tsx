@@ -84,14 +84,14 @@ export default function AudioPlayer({ fileId }: AudioPlayerProps) {
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0
 
   return (
-    <div className="flex items-center gap-3 px-3 h-10 shrink-0" style={{ backgroundColor: '#161b22' }}>
+    <div className="hidden md:flex items-center gap-3 px-3 h-10 shrink-0 rounded" style={{ backgroundColor: 'var(--bg-muted)', border: '1px solid var(--border)' }}>
       <audio ref={audioRef} src={src} preload="metadata" />
 
       {/* Play/Pause */}
       <button
         onClick={togglePlay}
         className="flex items-center justify-center w-8 h-8 rounded-full border-0 cursor-pointer"
-        style={{ backgroundColor: '#58a6ff', color: '#0d1117' }}
+        style={{ backgroundColor: 'var(--accent)', color: 'white' }}
         title={playing ? '暂停' : '播放'}
       >
         {playing ? (
@@ -109,25 +109,25 @@ export default function AudioPlayer({ fileId }: AudioPlayerProps) {
       {/* Progress bar */}
       <div
         className="flex-1 h-1.5 rounded-full cursor-pointer relative"
-        style={{ backgroundColor: '#30363d', minWidth: 100 }}
+        style={{ backgroundColor: 'var(--border)', minWidth: 100 }}
         onClick={handleProgressClick}
         onMouseDown={() => setSeeking(true)}
         onMouseUp={() => setSeeking(false)}
       >
         <div
           className="h-full rounded-full"
-          style={{ width: `${progressPercent}%`, backgroundColor: '#58a6ff' }}
+          style={{ width: `${progressPercent}%`, backgroundColor: 'var(--accent)' }}
         />
       </div>
 
       {/* Time */}
-      <span className="text-xs tabular-nums whitespace-nowrap" style={{ color: '#8b949e', minWidth: 70 }}>
+      <span className="text-xs tabular-nums whitespace-nowrap" style={{ color: 'var(--text-muted)', minWidth: 70 }}>
         {formatTime(currentTime)} / {formatTime(duration)}
       </span>
 
       {/* Volume */}
       <div className="flex items-center gap-1">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="#8b949e">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--text-muted)">
           <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0014 8.5v7a4.49 4.49 0 002.5-3.5z" />
         </svg>
         <input
@@ -137,7 +137,7 @@ export default function AudioPlayer({ fileId }: AudioPlayerProps) {
           step={0.01}
           value={volume}
           onChange={handleVolumeChange}
-          className="w-16 h-1 accent-[#58a6ff]"
+          className="w-16 h-1"
           style={{ cursor: 'pointer' }}
         />
       </div>

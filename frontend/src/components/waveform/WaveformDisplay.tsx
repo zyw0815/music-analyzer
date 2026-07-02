@@ -1,5 +1,6 @@
 import ResponsiveChart from '../ResponsiveChart'
 import type { WaveformResponse } from '../../types/analysis'
+import { cssVar } from '../../theme/cssVars'
 
 interface WaveformDisplayProps {
   waveform: WaveformResponse
@@ -13,6 +14,13 @@ function formatTime(seconds: number): string {
 
 export default function WaveformDisplay({ waveform }: WaveformDisplayProps) {
   const { waveform: wave, rms_envelope, clipping_regions, silence_regions } = waveform
+  const text = cssVar('--text', '#edf3fb')
+  const muted = cssVar('--text-muted', '#98a6b8')
+  const border = cssVar('--border', '#2a3545')
+  const grid = cssVar('--chart-grid', '#223044')
+  const tooltip = cssVar('--chart-tooltip', '#151d28')
+  const accent = cssVar('--accent', '#4f8cff')
+  const danger = cssVar('--danger', '#e8564f')
 
   // Downsample waveform to max 5000 points to prevent browser crash
   const MAX_POINTS = 5000
@@ -44,9 +52,9 @@ export default function WaveformDisplay({ waveform }: WaveformDisplayProps) {
   const option = {
     tooltip: {
       trigger: 'axis' as const,
-      backgroundColor: '#1c2128',
-      borderColor: '#30363d',
-      textStyle: { color: '#e6edf3', fontSize: 12 },
+      backgroundColor: tooltip,
+      borderColor: border,
+      textStyle: { color: text, fontSize: 12 },
       formatter: (params: Array<{ seriesName: string; value: [number, number]; marker: string }>) => {
         const time = params[0]?.value[0]
         const timeStr = formatTime(time)
@@ -66,25 +74,25 @@ export default function WaveformDisplay({ waveform }: WaveformDisplayProps) {
     xAxis: {
       type: 'value' as const,
       name: '时间',
-      nameTextStyle: { color: '#8b949e' },
+      nameTextStyle: { color: muted },
       min: 0,
       max: dTimes[dTimes.length - 1] || 0,
       axisLabel: {
-        color: '#8b949e',
+        color: muted,
         formatter: (v: number) => formatTime(v),
       },
-      axisLine: { lineStyle: { color: '#30363d' } },
+      axisLine: { lineStyle: { color: border } },
       splitLine: { show: false },
     },
     yAxis: {
       type: 'value' as const,
       name: '振幅',
-      nameTextStyle: { color: '#8b949e' },
+      nameTextStyle: { color: muted },
       min: -1,
       max: 1,
-      axisLabel: { color: '#8b949e' },
-      axisLine: { lineStyle: { color: '#30363d' } },
-      splitLine: { lineStyle: { color: '#21262d' } },
+      axisLabel: { color: muted },
+      axisLine: { lineStyle: { color: border } },
+      splitLine: { lineStyle: { color: grid } },
     },
     dataZoom: [
       {
@@ -97,11 +105,11 @@ export default function WaveformDisplay({ waveform }: WaveformDisplayProps) {
         xAxisIndex: 0,
         height: 20,
         bottom: 5,
-        borderColor: '#30363d',
-        backgroundColor: '#0d1117',
-        fillerColor: 'rgba(88,166,255,0.15)',
-        handleStyle: { color: '#58a6ff' },
-        textStyle: { color: '#8b949e' },
+        borderColor: border,
+        backgroundColor: cssVar('--bg-muted', '#0f1620'),
+        fillerColor: 'rgba(79,140,255,0.15)',
+        handleStyle: { color: accent },
+        textStyle: { color: muted },
       },
     ],
     series: [
@@ -111,7 +119,7 @@ export default function WaveformDisplay({ waveform }: WaveformDisplayProps) {
         data: dTimes.map((t, i) => [t, dSamples[i]]),
         smooth: false,
         symbol: 'none',
-        lineStyle: { color: '#58a6ff', width: 1 },
+        lineStyle: { color: accent, width: 1 },
         areaStyle: {
           color: {
             type: 'linear' as const,
@@ -136,7 +144,7 @@ export default function WaveformDisplay({ waveform }: WaveformDisplayProps) {
         data: dRmsTimes.map((t, i) => [t, dRmsValues[i]]),
         smooth: true,
         symbol: 'none',
-        lineStyle: { color: '#f85149', width: 1 },
+        lineStyle: { color: danger, width: 1 },
       },
       {
         name: 'RMS 包络 (反)',
@@ -144,21 +152,21 @@ export default function WaveformDisplay({ waveform }: WaveformDisplayProps) {
         data: dRmsTimes.map((t, i) => [t, -dRmsValues[i]]),
         smooth: true,
         symbol: 'none',
-        lineStyle: { color: '#f85149', width: 1 },
+        lineStyle: { color: danger, width: 1 },
       },
     ],
   }
 
   return (
-    <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}>
-      <h3 className="text-base font-semibold mb-1" style={{ color: '#e6edf3' }}>波形显示</h3>
-      <p className="text-xs mb-3" style={{ color: '#8b949e' }}>
-        显示音频信号的振幅随时间的变化。波形越高表示音量越大。红色包络线表示整体音量趋势。<span style={{ color: '#f85149' }}>红色区域</span>是削波（音量过大导致失真），<span style={{ color: '#8b949e' }}>灰色区域</span>是静音段。
+    <div className="surface rounded-lg p-5">
+      <h3 className="text-base font-semibold mb-1" style={{ color: 'var(--text)' }}>波形显示</h3>
+      <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>
+        显示音频信号的振幅随时间的变化。波形越高表示音量越大。红色包络线表示整体音量趋势。<span style={{ color: 'var(--danger)' }}>红色区域</span>是削波（音量过大导致失真），<span style={{ color: 'var(--text-muted)' }}>灰色区域</span>是静音段。
       </p>
       <ResponsiveChart option={option} height={350} />
-      <div className="flex gap-4 mt-2 text-xs" style={{ color: '#8b949e' }}>
-        <span><span className="inline-block w-3 h-0.5 mr-1" style={{ backgroundColor: '#58a6ff' }} />波形</span>
-        <span><span className="inline-block w-3 h-0.5 mr-1" style={{ backgroundColor: '#f85149' }} />RMS 包络</span>
+      <div className="flex gap-4 mt-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+        <span><span className="inline-block w-3 h-0.5 mr-1" style={{ backgroundColor: 'var(--accent)' }} />波形</span>
+        <span><span className="inline-block w-3 h-0.5 mr-1" style={{ backgroundColor: 'var(--danger)' }} />RMS 包络</span>
         {clipping_regions.length > 0 && (
           <span><span className="inline-block w-3 h-3 mr-1 align-middle" style={{ backgroundColor: 'rgba(248,81,73,0.3)' }} />削波区域</span>
         )}

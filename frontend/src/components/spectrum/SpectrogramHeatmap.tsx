@@ -1,5 +1,6 @@
 import ResponsiveChart from '../ResponsiveChart'
 import type { SpectrogramData } from '../../types/analysis'
+import { cssVar } from '../../theme/cssVars'
 
 interface SpectrogramHeatmapProps {
   spectrogram: SpectrogramData
@@ -45,12 +46,16 @@ function getDisplayMaxFrequency(frequencies: number[], magnitudeDb: number[][]):
 export default function SpectrogramHeatmap({ spectrogram }: SpectrogramHeatmapProps) {
   if (!spectrogram || !spectrogram.frequencies || !spectrogram.times || !spectrogram.magnitude_db) {
     console.error('SpectrogramHeatmap: invalid data', spectrogram)
-    return <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d', color: '#f85149' }}>
+    return <div className="surface rounded-lg p-5" style={{ color: 'var(--danger)' }}>
       声谱图数据加载失败
     </div>
   }
 
   const { frequencies, times, magnitude_db } = spectrogram
+  const text = cssVar('--text', '#edf3fb')
+  const muted = cssVar('--text-muted', '#98a6b8')
+  const border = cssVar('--border', '#2a3545')
+  const tooltip = cssVar('--chart-tooltip', '#151d28')
 
   // Downsample to prevent browser crash (max ~40k data points)
   const maxDisplayFreqHz = getDisplayMaxFrequency(frequencies, magnitude_db)
@@ -77,9 +82,9 @@ export default function SpectrogramHeatmap({ spectrogram }: SpectrogramHeatmapPr
 
   const option = {
     tooltip: {
-      backgroundColor: '#1c2128',
-      borderColor: '#30363d',
-      textStyle: { color: '#e6edf3', fontSize: 12 },
+      backgroundColor: tooltip,
+      borderColor: border,
+      textStyle: { color: text, fontSize: 12 },
       formatter: (params: { value: [number, number, number] }) => {
         const [tIdx, fIdx, db] = params.value
         const time = dTimes[tIdx]
@@ -102,14 +107,14 @@ export default function SpectrogramHeatmap({ spectrogram }: SpectrogramHeatmapPr
         const sec = Math.floor(t % 60)
         return `${min}:${String(sec).padStart(2, '0')}`
       }),
-      axisLabel: { color: '#8b949e', interval: Math.floor(dTimes.length / 10) },
-      axisLine: { lineStyle: { color: '#30363d' } },
+      axisLabel: { color: muted, interval: Math.floor(dTimes.length / 10) },
+      axisLine: { lineStyle: { color: border } },
     },
     yAxis: {
       type: 'category' as const,
       data: dFreqs.map(({ freq }) => (freq >= 1000 ? `${(freq / 1000).toFixed(1)}k` : `${freq}`)),
-      axisLabel: { color: '#8b949e' },
-      axisLine: { lineStyle: { color: '#30363d' } },
+      axisLabel: { color: muted },
+      axisLine: { lineStyle: { color: border } },
     },
     visualMap: {
       min: -90,
@@ -123,23 +128,23 @@ export default function SpectrogramHeatmap({ spectrogram }: SpectrogramHeatmapPr
       inRange: {
         color: ['#0c1445', '#1a3a8a', '#2563eb', '#f59e0b', '#ef4444'],
       },
-      textStyle: { color: '#8b949e' },
+      textStyle: { color: muted },
     },
     series: [
       {
         type: 'heatmap',
         data,
         emphasis: {
-          itemStyle: { borderColor: '#e6edf3', borderWidth: 1 },
+          itemStyle: { borderColor: text, borderWidth: 1 },
         },
       },
     ],
   }
 
   return (
-    <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}>
-      <h3 className="text-base font-semibold mb-1" style={{ color: '#e6edf3' }}>声谱图</h3>
-      <p className="text-xs mb-3" style={{ color: '#8b949e' }}>
+    <div className="surface rounded-lg p-5">
+      <h3 className="text-base font-semibold mb-1" style={{ color: 'var(--text)' }}>声谱图</h3>
+      <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>
         横轴是时间，纵轴是频率，颜色代表音量（蓝=轻，红=响）。可以直观看到音乐随时间的频率变化，例如鼓点在低频的规律脉冲。
       </p>
       <ResponsiveChart option={option} height={350} />
