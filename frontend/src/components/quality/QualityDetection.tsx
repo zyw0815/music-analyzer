@@ -33,6 +33,7 @@ function getGradeLabel(score: number): string {
 
 export default function QualityDetection({ quality }: QualityDetectionProps) {
   const [detailsExpanded, setDetailsExpanded] = useState(false)
+  const [activeTip, setActiveTip] = useState<string | null>(null)
   const color = gradeColor(quality.overall_score)
   const gradeText = getGradeLabel(quality.overall_score)
 
@@ -86,8 +87,24 @@ export default function QualityDetection({ quality }: QualityDetectionProps) {
             const value = quality.sub_scores[key]
             const barColor = gradeColor(value)
             return (
-              <div key={key} className="flex items-center gap-3 group relative">
-                <div className="text-sm w-24 shrink-0 cursor-help" style={{ color: '#8b949e' }} title={tip}>{label} ⓘ</div>
+              <div key={key} className="flex items-center gap-3">
+                <div className="text-sm w-24 shrink-0 flex items-center gap-1" style={{ color: '#8b949e' }}>
+                  {label}
+                  <span
+                    className="cursor-help text-xs"
+                    style={{ color: '#58a6ff' }}
+                    onMouseEnter={() => setActiveTip(key)}
+                    onMouseLeave={() => setActiveTip(null)}
+                  >ⓘ</span>
+                  {activeTip === key && (
+                    <div
+                      className="absolute z-10 px-3 py-2 rounded text-xs leading-relaxed"
+                      style={{ backgroundColor: '#1c2128', border: '1px solid #30363d', color: '#e6edf3', top: '100%', left: 0, width: 280, marginTop: 4 }}
+                    >
+                      {tip}
+                    </div>
+                  )}
+                </div>
                 <div className="flex-1 h-3 rounded-full overflow-hidden" style={{ backgroundColor: '#30363d' }}>
                   <div
                     className="h-full rounded-full transition-all duration-500"
