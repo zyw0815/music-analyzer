@@ -1,4 +1,4 @@
-import ReactECharts from 'echarts-for-react'
+import ResponsiveChart from '../ResponsiveChart'
 import type { SpectrumData } from '../../types/analysis'
 
 interface SpectrumAnalyzerProps {
@@ -98,7 +98,7 @@ export default function SpectrumAnalyzer({ spectrum }: SpectrumAnalyzerProps) {
   return (
     <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}>
       <h3 className="text-base font-semibold mb-3" style={{ color: '#e6edf3' }}>频谱分析</h3>
-      <ReactECharts option={option} style={{ width: '100%', height: 350 }} />
+      <ResponsiveChart option={option} height={350} />
     </div>
   )
 }
