@@ -16,18 +16,22 @@ export default function SpectrogramHeatmap({ spectrogram }: SpectrogramHeatmapPr
   const { frequencies, times, magnitude_db } = spectrogram
 
   // Downsample to prevent browser crash (max ~40k data points)
+  const MAX_DISPLAY_FREQ_HZ = 24000
   const MAX_TIME = 200
   const MAX_FREQ = 200
+  const visibleFreqs = frequencies
+    .map((freq, index) => ({ freq, index }))
+    .filter(({ freq }) => freq <= MAX_DISPLAY_FREQ_HZ)
   const timeStep = Math.max(1, Math.floor(times.length / MAX_TIME))
-  const freqStep = Math.max(1, Math.floor(frequencies.length / MAX_FREQ))
+  const freqStep = Math.max(1, Math.floor(visibleFreqs.length / MAX_FREQ))
   const dTimes = times.filter((_, i) => i % timeStep === 0)
-  const dFreqs = frequencies.filter((_, i) => i % freqStep === 0)
+  const dFreqs = visibleFreqs.filter((_, i) => i % freqStep === 0)
 
   const data: Array<[number, number, number]> = []
   for (let t = 0; t < dTimes.length; t++) {
     for (let f = 0; f < dFreqs.length; f++) {
       const origT = t * timeStep
-      const origF = f * freqStep
+      const origF = dFreqs[f].index
       if (magnitude_db[origF] && magnitude_db[origF][origT] !== undefined) {
         data.push([t, f, magnitude_db[origF][origT]])
       }
@@ -42,7 +46,7 @@ export default function SpectrogramHeatmap({ spectrogram }: SpectrogramHeatmapPr
       formatter: (params: { value: [number, number, number] }) => {
         const [tIdx, fIdx, db] = params.value
         const time = dTimes[tIdx]
-        const freq = dFreqs[fIdx]
+        const freq = dFreqs[fIdx].freq
         const freqStr = freq >= 1000 ? `${(freq / 1000).toFixed(1)} kHz` : `${freq} Hz`
         const timeStr = `${Math.floor(time / 60)}:${String(Math.floor(time % 60)).padStart(2, '0')}`
         return `时间: ${timeStr}<br/>频率: ${freqStr}<br/>幅度: ${db.toFixed(1)} dB`
@@ -66,7 +70,7 @@ export default function SpectrogramHeatmap({ spectrogram }: SpectrogramHeatmapPr
     },
     yAxis: {
       type: 'category' as const,
-      data: dFreqs.map((f) => (f >= 1000 ? `${(f / 1000).toFixed(1)}k` : `${f}`)),
+      data: dFreqs.map(({ freq }) => (freq >= 1000 ? `${(freq / 1000).toFixed(1)}k` : `${freq}`)),
       axisLabel: { color: '#8b949e' },
       axisLine: { lineStyle: { color: '#30363d' } },
     },
