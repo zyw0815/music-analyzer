@@ -32,6 +32,19 @@ class TestAnalyze:
         assert r.json()["file"]["name"] == "basic-original.wav"
         assert r.json()["audio"]["sample_rate_hz"] == 44100
 
+    def test_analyze_job(self, sample_wav_stereo):
+        with open(sample_wav_stereo, "rb") as f:
+            r = client.post("/api/analyze/jobs", files={"file": ("job-original.wav", f, "audio/wav")})
+        assert r.status_code == 200
+        job_id = r.json()["job_id"]
+
+        job = client.get(f"/api/analyze/jobs/{job_id}")
+        assert job.status_code == 200
+        data = job.json()
+        assert data["status"] == "done"
+        assert data["progress"] == 100
+        assert data["result"]["basic_info"]["file"]["name"] == "job-original.wav"
+
     def test_rejects_invalid_format(self, tmp_dir):
         fake = tmp_dir / "test.xyz"
         fake.write_bytes(b"fake")
