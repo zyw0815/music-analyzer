@@ -3,7 +3,7 @@ import { analyzeFile } from '../../api/client'
 import type { FullAnalysisResponse } from '../../types/analysis'
 
 const ACCEPTED = '.mp3,.wav,.flac,.aac,.ogg,.aiff,.wma,.m4a,.ape,.dsf,.dff,.opus'
-const MAX_SIZE_MB = 500
+const MAX_SIZE_GB = 5
 
 interface FileUploadProps {
   onUploadComplete: (data: FullAnalysisResponse) => void
@@ -18,8 +18,8 @@ export default function FileUpload({ onUploadComplete, onError }: FileUploadProp
   const inputRef = useRef<HTMLInputElement>(null)
 
   function validateFile(file: File): string | null {
-    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-      return `文件大小超过限制（最大 ${MAX_SIZE_MB}MB）`
+    if (file.size > MAX_SIZE_GB * 1024 * 1024 * 1024) {
+      return `文件大小超过限制（最大 ${MAX_SIZE_GB}GB）`
     }
     const ext = '.' + file.name.split('.').pop()?.toLowerCase()
     if (!ACCEPTED.split(',').includes(ext)) {
