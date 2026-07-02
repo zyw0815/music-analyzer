@@ -26,6 +26,15 @@ def _validate_upload(file: UploadFile, content: bytes) -> None:
         raise HTTPException(status_code=400, detail="File too large")
 
 
+def _display_filename(file: UploadFile) -> str:
+    return Path(file.filename or "upload.bin").name
+
+
+def _apply_display_filename(basic_info: dict, file: UploadFile) -> dict:
+    basic_info["file"]["name"] = _display_filename(file)
+    return basic_info
+
+
 @router.post("/analyze")
 async def analyze_file(file: UploadFile = File(...)):
     """Full analysis: runs all 5 analyzers."""
@@ -40,6 +49,7 @@ async def analyze_file(file: UploadFile = File(...)):
 
     basic_analyzer = BasicInfoAnalyzer(str(analysis_path))
     basic_info = basic_analyzer.analyze()
+    basic_info = _apply_display_filename(basic_info, file)
 
     quality_analyzer = QualityAnalyzer(str(analysis_path), basic_info)
     quality_info = quality_analyzer.analyze()
@@ -77,5 +87,6 @@ async def analyze_basic(file: UploadFile = File(...)):
 
     basic_analyzer = BasicInfoAnalyzer(str(analysis_path))
     basic_info = basic_analyzer.analyze()
+    basic_info = _apply_display_filename(basic_info, file)
 
     return basic_info
