@@ -1,4 +1,4 @@
-import ReactECharts from 'echarts-for-react'
+import ResponsiveChart from '../ResponsiveChart'
 import type { WaveformResponse } from '../../types/analysis'
 
 interface WaveformDisplayProps {
@@ -152,7 +152,7 @@ export default function WaveformDisplay({ waveform }: WaveformDisplayProps) {
   return (
     <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}>
       <h3 className="text-base font-semibold mb-3" style={{ color: '#e6edf3' }}>波形显示</h3>
-      <ReactECharts option={option} style={{ width: '100%', height: 350 }} />
+      <ResponsiveChart option={option} height={350} />
       <div className="flex gap-4 mt-2 text-xs" style={{ color: '#8b949e' }}>
         <span><span className="inline-block w-3 h-0.5 mr-1" style={{ backgroundColor: '#58a6ff' }} />波形</span>
         <span><span className="inline-block w-3 h-0.5 mr-1" style={{ backgroundColor: '#f85149' }} />RMS 包络</span>

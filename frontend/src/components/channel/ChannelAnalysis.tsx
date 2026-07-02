@@ -1,4 +1,4 @@
-import ReactECharts from 'echarts-for-react'
+import ResponsiveChart from '../ResponsiveChart'
 import type { ChannelResponse } from '../../types/analysis'
 import PhaseCorrelation from './PhaseCorrelation'
 import MidSideSpectrum from './MidSideSpectrum'
@@ -92,7 +92,7 @@ export default function ChannelAnalysis({ channel }: ChannelAnalysisProps) {
             此文件为单声道
           </div>
         )}
-        <ReactECharts option={lrOption} style={{ width: '100%', height: 300 }} />
+        <ResponsiveChart option={lrOption} height={300} />
 
         {/* Channel balance indicator */}
         <div className="mt-4">

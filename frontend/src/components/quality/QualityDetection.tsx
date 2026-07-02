@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import ReactECharts from 'echarts-for-react'
+import ResponsiveChart from '../ResponsiveChart'
 import type { QualityResponse } from '../../types/analysis'
 
 interface QualityDetectionProps {
@@ -76,7 +76,7 @@ export default function QualityDetection({ quality }: QualityDetectionProps) {
         {/* Left: Overall gauge */}
         <div className="flex flex-col items-center shrink-0" style={{ width: 180 }}>
           <div className="text-xs font-medium mb-2" style={{ color: '#8b949e' }}>综合评分</div>
-          <ReactECharts option={gaugeOption} style={{ width: 180, height: 150 }} />
+          <ResponsiveChart option={gaugeOption} width={180} height={150} />
           <div className="text-sm font-semibold mt-1" style={{ color }}>{gradeText}</div>
         </div>
 
