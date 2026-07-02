@@ -7,6 +7,10 @@ import librosa
 import numpy as np
 
 
+def adaptive_hop_length(y: np.ndarray, target_frames: int, minimum: int = 512) -> int:
+    return max(minimum, int(np.ceil(len(y) / target_frames)))
+
+
 @dataclass
 class AnalysisContext:
     file_path: str

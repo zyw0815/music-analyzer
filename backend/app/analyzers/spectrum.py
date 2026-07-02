@@ -1,6 +1,6 @@
 import numpy as np
 import librosa
-from app.analyzers.context import AnalysisContext
+from app.analyzers.context import AnalysisContext, adaptive_hop_length
 
 
 class SpectrumAnalyzer:
@@ -21,10 +21,11 @@ class SpectrumAnalyzer:
 
     def _spectrum(self, y: np.ndarray, sr: int) -> dict:
         n_fft = 4096
+        hop = adaptive_hop_length(y, target_frames=1200, minimum=n_fft // 4)
         if self.context is not None:
-            S = self.context.stft(y, n_fft=n_fft)
+            S = self.context.stft(y, n_fft=n_fft, hop_length=hop)
         else:
-            S = np.abs(librosa.stft(y, n_fft=n_fft))
+            S = np.abs(librosa.stft(y, n_fft=n_fft, hop_length=hop))
         mag = np.mean(S, axis=1)
         mag_db = librosa.amplitude_to_db(mag, ref=np.max)
         peak_hold = np.max(S, axis=1)
@@ -38,18 +39,13 @@ class SpectrumAnalyzer:
 
     def _spectrogram(self, y: np.ndarray, sr: int) -> dict:
         n_fft = 2048
-        hop = 512
+        hop = adaptive_hop_length(y, target_frames=500, minimum=512)
         if self.context is not None:
             S = self.context.stft(y, n_fft=n_fft, hop_length=hop, cache=False)
         else:
             S = np.abs(librosa.stft(y, n_fft=n_fft, hop_length=hop))
         S_db = librosa.amplitude_to_db(S, ref=np.max)
         freqs = librosa.fft_frequencies(sr=sr, n_fft=n_fft)
-        # Downsample to ~500 time steps
-        n_times = S_db.shape[1]
-        if n_times > 500:
-            indices = np.linspace(0, n_times - 1, 500, dtype=int)
-            S_db = S_db[:, indices]
         return {
             "frequencies": freqs.tolist(),
             "times": np.linspace(0, len(y) / sr, S_db.shape[1]).tolist(),
@@ -65,10 +61,11 @@ class SpectrumAnalyzer:
             ("6k-20kHz", 6000, 20000),
         ]
         n_fft = 4096
+        hop = adaptive_hop_length(y, target_frames=1200, minimum=n_fft // 4)
         if self.context is not None:
-            S = self.context.stft(y, n_fft=n_fft)
+            S = self.context.stft(y, n_fft=n_fft, hop_length=hop)
         else:
-            S = np.abs(librosa.stft(y, n_fft=n_fft))
+            S = np.abs(librosa.stft(y, n_fft=n_fft, hop_length=hop))
         mag = np.mean(S, axis=1)
         freqs = librosa.fft_frequencies(sr=sr, n_fft=n_fft)
         ref = np.max(mag) if np.max(mag) > 0 else 1.0

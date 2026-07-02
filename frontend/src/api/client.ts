@@ -3,7 +3,7 @@ import type { BasicInfoResponse, FullAnalysisResponse } from '../types/analysis'
 
 const api = axios.create({
   baseURL: '/api',
-  timeout: 300000, // 5 min for large files
+  timeout: 0,
 })
 
 export async function analyzeFile(

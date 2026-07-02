@@ -1,6 +1,6 @@
 import numpy as np
 import librosa
-from app.analyzers.context import AnalysisContext
+from app.analyzers.context import AnalysisContext, adaptive_hop_length
 
 
 class QualityAnalyzer:
@@ -86,10 +86,11 @@ class QualityAnalyzer:
         return round(balance_score * 0.5 + stereo_score * 0.5)
 
     def _score_spectral(self) -> int:
+        hop = adaptive_hop_length(self.y, target_frames=1200, minimum=1024)
         if self.context is not None:
-            S = self.context.stft(self.y, n_fft=4096)
+            S = self.context.stft(self.y, n_fft=4096, hop_length=hop)
         else:
-            S = np.abs(librosa.stft(self.y, n_fft=4096))
+            S = np.abs(librosa.stft(self.y, n_fft=4096, hop_length=hop))
         freqs = librosa.fft_frequencies(sr=self.sr, n_fft=4096)
         mag = np.mean(S, axis=1)
         high_mask = freqs >= 10000
