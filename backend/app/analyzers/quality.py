@@ -1,6 +1,6 @@
 import numpy as np
 import librosa
-from app.analyzers.context import AnalysisContext, adaptive_hop_length
+from app.analyzers.context import AnalysisContext, adaptive_hop_length, true_runs
 
 
 class QualityAnalyzer:
@@ -113,18 +113,8 @@ class QualityAnalyzer:
             return self._clipping
         threshold = 0.999
         clip_mask = np.abs(self.y) >= threshold
-        clip_count = 0
-        in_clip = False
-        consecutive = 0
-        for val in clip_mask:
-            if val:
-                consecutive += 1
-                if consecutive >= 3 and not in_clip:
-                    clip_count += 1
-                    in_clip = True
-            else:
-                consecutive = 0
-                in_clip = False
+        starts, _ends = true_runs(clip_mask, min_length=3)
+        clip_count = len(starts)
         total = len(self.y)
         ratio = np.sum(clip_mask) / total * 100 if total > 0 else 0
         self._clipping = {"detected": clip_count > 0, "clip_count": clip_count, "clip_ratio_percent": round(ratio, 4)}

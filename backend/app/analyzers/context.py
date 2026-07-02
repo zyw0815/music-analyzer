@@ -11,6 +11,18 @@ def adaptive_hop_length(y: np.ndarray, target_frames: int, minimum: int = 512) -
     return max(minimum, int(np.ceil(len(y) / target_frames)))
 
 
+def true_runs(mask: np.ndarray, min_length: int = 1) -> tuple[np.ndarray, np.ndarray]:
+    if mask.size == 0:
+        return np.array([], dtype=int), np.array([], dtype=int)
+
+    padded = np.concatenate(([False], mask, [False]))
+    changes = np.diff(padded.astype(np.int8))
+    starts = np.flatnonzero(changes == 1)
+    ends = np.flatnonzero(changes == -1)
+    keep = (ends - starts) >= min_length
+    return starts[keep], ends[keep]
+
+
 @dataclass
 class AnalysisContext:
     file_path: str

@@ -1,6 +1,6 @@
 import numpy as np
 import librosa
-from app.analyzers.context import AnalysisContext
+from app.analyzers.context import AnalysisContext, true_runs
 
 
 class WaveformAnalyzer:
@@ -55,27 +55,14 @@ class WaveformAnalyzer:
     def _detect_clipping(self, y: np.ndarray, sr: int) -> list:
         threshold = 0.999
         clip_mask = np.abs(y) >= threshold
-        regions = []
-        consecutive = 0
-        start_idx = 0
-        for i, val in enumerate(clip_mask):
-            if val:
-                if consecutive == 0:
-                    start_idx = i
-                consecutive += 1
-            else:
-                if consecutive >= 3:
-                    regions.append({
-                        "start": round(float(start_idx / sr), 3),
-                        "end": round(float(i / sr), 3),
-                    })
-                consecutive = 0
-        if consecutive >= 3:
-            regions.append({
-                "start": round(float(start_idx / sr), 3),
-                "end": round(float(len(y) / sr), 3),
-            })
-        return regions
+        starts, ends = true_runs(clip_mask, min_length=3)
+        return [
+            {
+                "start": round(float(start / sr), 3),
+                "end": round(float(end / sr), 3),
+            }
+            for start, end in zip(starts, ends)
+        ]
 
     def _detect_silence(self, y: np.ndarray, sr: int) -> list:
         frame_length = 2048

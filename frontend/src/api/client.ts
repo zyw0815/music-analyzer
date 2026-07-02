@@ -27,7 +27,7 @@ export async function analyzeFile(
   })
 
   while (true) {
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    await new Promise((resolve) => setTimeout(resolve, 3000))
     const job = await api.get<{
       status: 'queued' | 'running' | 'done' | 'error'
       progress: number
