@@ -21,6 +21,8 @@ export default function FrequencyDistributionChart({ distribution }: FrequencyDi
   const border = cssVar('--border', '#2a3545')
   const grid = cssVar('--chart-grid', '#223044')
   const tooltip = cssVar('--chart-tooltip', '#151d28')
+  const minDb = -80
+  const displayValues = distribution.energy_db.map((value) => Math.max(0, Math.min(80, value - minDb)))
 
   const option = {
     tooltip: {
@@ -30,7 +32,9 @@ export default function FrequencyDistributionChart({ distribution }: FrequencyDi
       textStyle: { color: text, fontSize: 12 },
       formatter: (params: Array<{ name: string; value: number; marker: string }>) => {
         const p = params[0]
-        return `${p.marker} ${p.name}<br/>能量: ${p.value.toFixed(1)} dB`
+        const index = distribution.bands.indexOf(p.name)
+        const db = distribution.energy_db[index] ?? minDb
+        return `${p.marker} ${p.name}<br/>能量: ${db.toFixed(1)} dB`
       },
     },
     grid: {
@@ -47,16 +51,21 @@ export default function FrequencyDistributionChart({ distribution }: FrequencyDi
     },
     yAxis: {
       type: 'value' as const,
-      name: '能量 (dB)',
+      name: '相对强度',
+      min: 0,
+      max: 80,
       nameTextStyle: { color: muted },
-      axisLabel: { color: muted },
+      axisLabel: {
+        color: muted,
+        formatter: (value: number) => `${value + minDb}`,
+      },
       axisLine: { lineStyle: { color: border } },
       splitLine: { lineStyle: { color: grid } },
     },
     series: [
       {
         type: 'bar',
-        data: distribution.energy_db.map((val, i) => ({
+        data: displayValues.map((val, i) => ({
           value: val,
           itemStyle: { color: BAND_COLORS[i % BAND_COLORS.length] },
         })),
@@ -66,7 +75,7 @@ export default function FrequencyDistributionChart({ distribution }: FrequencyDi
           position: 'top' as const,
           color: muted,
           fontSize: 11,
-          formatter: (p: { value: number }) => `${p.value.toFixed(1)}`,
+          formatter: (p: { dataIndex: number }) => `${distribution.energy_db[p.dataIndex].toFixed(1)}`,
         },
       },
     ],

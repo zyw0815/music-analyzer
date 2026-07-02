@@ -60,7 +60,7 @@ class SpectrumAnalyzer:
             ("2k-6kHz", 2000, 6000),
             ("6k-20kHz", 6000, 20000),
         ]
-        n_fft = 4096
+        n_fft = self._band_n_fft(sr)
         hop = adaptive_hop_length(y, target_frames=1200, minimum=n_fft // 4)
         if self.context is not None:
             S = self.context.stft(y, n_fft=n_fft, hop_length=hop)
@@ -81,3 +81,8 @@ class SpectrumAnalyzer:
             band_names.append(name)
             energies.append(round(energy_db, 1))
         return {"bands": band_names, "energy_db": energies}
+
+    def _band_n_fft(self, sr: int) -> int:
+        target_resolution_hz = 5
+        n_fft = 1 << int(np.ceil(np.log2(sr / target_resolution_hz)))
+        return int(np.clip(n_fft, 4096, 32768))
