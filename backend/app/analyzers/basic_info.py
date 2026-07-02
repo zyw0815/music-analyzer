@@ -87,15 +87,28 @@ class BasicInfoAnalyzer:
         }
 
     def _timing_info(self) -> dict:
-        if self.context is not None:
-            duration = len(self.context.mono) / self.context.sr
-        else:
-            y, sr = librosa.load(str(self.file_path), sr=None, mono=True, duration=None)
-            duration = len(y) / sr
+        duration = self._metadata_duration_seconds()
+        if duration is None:
+            if self.context is not None:
+                duration = len(self.context.mono) / self.context.sr
+            else:
+                y, sr = librosa.load(str(self.file_path), sr=None, mono=True, duration=None)
+                duration = len(y) / sr
         return {
             "duration_seconds": round(duration, 2),
             "start_offset": 0.0,
         }
+
+    def _metadata_duration_seconds(self) -> Optional[float]:
+        try:
+            mf = MutagenFile(str(self.file_path))
+            if mf and mf.info:
+                length = getattr(mf.info, "length", None)
+                if length and length > 0:
+                    return float(length)
+        except Exception:
+            pass
+        return None
 
     def _loudness_info(self) -> dict:
         if self.context is not None:

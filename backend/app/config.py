@@ -4,6 +4,7 @@ from pathlib import Path
 BACKEND_PORT = 9220
 FRONTEND_PORT = 9211
 MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024 * 1024  # 5 GB
+ANALYSIS_MAX_SAMPLES = int(os.environ.get("ANALYZER_MAX_SAMPLES", 8_000_000))
 
 SUPPORTED_FORMATS = {
     "mp3", "wav", "flac", "aac", "ogg", "oga", "opus",

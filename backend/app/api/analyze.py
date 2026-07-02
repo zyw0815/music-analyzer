@@ -4,7 +4,7 @@ from typing import Dict
 from fastapi import APIRouter, HTTPException, UploadFile, File
 
 from app.config import SUPPORTED_FORMATS, AUDIO_EXTENSIONS, MAX_FILE_SIZE_BYTES
-from app.utils import get_analysis_path, save_upload
+from app.utils import get_analysis_path, reserve_upload_path
 from app.analyzers.context import AnalysisContext
 from app.analyzers.basic_info import BasicInfoAnalyzer
 from app.analyzers.quality import QualityAnalyzer
@@ -18,13 +18,30 @@ router = APIRouter()
 _file_store: Dict[str, Path] = {}
 
 
-def _validate_upload(file: UploadFile, content: bytes) -> None:
-    """Validate format and size, raise 400 on failure."""
+def _validate_upload_extension(file: UploadFile) -> None:
     ext = Path(file.filename or "").suffix.lower().lstrip(".")
     if ext not in SUPPORTED_FORMATS:
         raise HTTPException(status_code=400, detail=f"Unsupported format: .{ext}")
-    if len(content) > MAX_FILE_SIZE_BYTES:
-        raise HTTPException(status_code=400, detail="File too large")
+
+
+async def _save_upload(file: UploadFile) -> Path:
+    _validate_upload_extension(file)
+    path = reserve_upload_path(file.filename or "upload.bin")
+    total = 0
+    try:
+        with path.open("wb") as out:
+            while True:
+                chunk = await file.read(1024 * 1024)
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > MAX_FILE_SIZE_BYTES:
+                    raise HTTPException(status_code=400, detail="File too large")
+                out.write(chunk)
+    except Exception:
+        path.unlink(missing_ok=True)
+        raise
+    return path
 
 
 def _display_filename(file: UploadFile) -> str:
@@ -39,10 +56,7 @@ def _apply_display_filename(basic_info: dict, file: UploadFile) -> dict:
 @router.post("/analyze")
 async def analyze_file(file: UploadFile = File(...)):
     """Full analysis: runs all 5 analyzers."""
-    content = await file.read()
-    _validate_upload(file, content)
-
-    saved_path = save_upload(content, file.filename or "upload.bin")
+    saved_path = await _save_upload(file)
     file_id = saved_path.stem
     _file_store[file_id] = saved_path
 
@@ -78,10 +92,7 @@ async def analyze_file(file: UploadFile = File(...)):
 @router.post("/analyze/basic")
 async def analyze_basic(file: UploadFile = File(...)):
     """Basic info only: runs BasicInfoAnalyzer only."""
-    content = await file.read()
-    _validate_upload(file, content)
-
-    saved_path = save_upload(content, file.filename or "upload.bin")
+    saved_path = await _save_upload(file)
     file_id = saved_path.stem
     _file_store[file_id] = saved_path
 

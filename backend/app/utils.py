@@ -33,3 +33,9 @@ def save_upload(content: bytes, filename: str) -> Path:
     path = TMP_DIR / f"{file_id}{ext}"
     path.write_bytes(content)
     return path
+
+
+def reserve_upload_path(filename: str) -> Path:
+    file_id = uuid.uuid4().hex
+    ext = Path(filename).suffix
+    return TMP_DIR / f"{file_id}{ext}"

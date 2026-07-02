@@ -6,6 +6,8 @@ from typing import Dict, Optional, Tuple
 import librosa
 import numpy as np
 
+from app.config import ANALYSIS_MAX_SAMPLES
+
 
 def adaptive_hop_length(y: np.ndarray, target_frames: int, minimum: int = 512) -> int:
     return max(minimum, int(np.ceil(len(y) / target_frames)))
@@ -22,7 +24,9 @@ class AnalysisContext:
 
     @classmethod
     def from_file(cls, file_path: str) -> "AnalysisContext":
-        y_stereo, sr = librosa.load(file_path, sr=None, mono=False)
+        sr = librosa.get_samplerate(path=file_path)
+        duration = ANALYSIS_MAX_SAMPLES / sr
+        y_stereo, sr = librosa.load(file_path, sr=None, mono=False, duration=duration)
         return cls(file_path=file_path, y_stereo=y_stereo, sr=sr)
 
     @property
