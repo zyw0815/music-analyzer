@@ -94,16 +94,6 @@ button, input {
   border: 1px solid var(--border);
 }
 
-@keyframes phasePulse {
-  0%, 100% { transform: scaleY(0.45); opacity: 0.55; }
-  50% { transform: scaleY(1); opacity: 1; }
-}
-
-.phase-bar {
-  animation: phasePulse 1.35s ease-in-out infinite;
-  transform-origin: bottom;
-}
-
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg-muted); }
 ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
