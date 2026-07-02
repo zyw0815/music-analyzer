@@ -31,6 +31,7 @@ class AnalysisContext:
     _mono: Optional[np.ndarray] = None
     _stft_cache: Dict[Tuple[int, int, int], np.ndarray] = field(default_factory=dict)
     _rms_cache: Dict[Tuple[int, int, int], np.ndarray] = field(default_factory=dict)
+    _stats: Optional[dict] = None
 
     @classmethod
     def from_file(cls, file_path: str) -> "AnalysisContext":
@@ -83,3 +84,40 @@ class AnalysisContext:
                 hop_length=hop_length,
             )[0]
         return self._rms_cache[key]
+
+    def stats(self) -> dict:
+        if self._stats is not None:
+            return self._stats
+
+        y = self.mono
+        abs_y = np.abs(y)
+        peak = float(np.max(abs_y)) if len(abs_y) else 0.0
+        peak_db = 20 * np.log10(peak) if peak > 0 else -np.inf
+
+        square_sum = float(np.dot(y, y))
+        rms = np.sqrt(square_sum / len(y)) if len(y) else 0.0
+        rms_db = 20 * np.log10(rms) if rms > 0 else -np.inf
+
+        nonzero = abs_y > 0.001
+        if np.any(nonzero):
+            noise_floor = 20 * np.log10(np.percentile(abs_y[nonzero], 5))
+        else:
+            noise_floor = -np.inf
+
+        clip_mask = abs_y >= 0.999
+        clip_starts, _clip_ends = true_runs(clip_mask, min_length=3)
+        clip_ratio_percent = float(np.sum(clip_mask) / len(y) * 100) if len(y) else 0.0
+
+        dynamic_range = peak_db - noise_floor if noise_floor > -np.inf else 0
+        self._stats = {
+            "peak_db": round(float(peak_db), 2),
+            "rms_db": round(float(rms_db), 2),
+            "noise_floor_db": float(noise_floor),
+            "dynamic_range_db": round(float(dynamic_range), 2),
+            "clipping": {
+                "detected": len(clip_starts) > 0,
+                "clip_count": int(len(clip_starts)),
+                "clip_ratio_percent": round(clip_ratio_percent, 4),
+            },
+        }
+        return self._stats

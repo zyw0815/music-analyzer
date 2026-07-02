@@ -112,18 +112,21 @@ class BasicInfoAnalyzer:
 
     def _loudness_info(self) -> dict:
         if self.context is not None:
-            y = self.context.mono
-        else:
-            y, sr = librosa.load(str(self.file_path), sr=None, mono=True)
-        peak = np.max(np.abs(y))
+            stats = self.context.stats()
+            return {
+                "peak_db": stats["peak_db"],
+                "rms_db": stats["rms_db"],
+                "dynamic_range_db": stats["dynamic_range_db"],
+            }
+
+        y, sr = librosa.load(str(self.file_path), sr=None, mono=True)
+        abs_y = np.abs(y)
+        peak = np.max(abs_y)
         peak_db = 20 * np.log10(peak) if peak > 0 else -np.inf
         rms = np.sqrt(np.mean(y ** 2))
         rms_db = 20 * np.log10(rms) if rms > 0 else -np.inf
-        nonzero = np.abs(y) > 0.001
-        if np.any(nonzero):
-            noise_floor = 20 * np.log10(np.percentile(np.abs(y[nonzero]), 5))
-        else:
-            noise_floor = -np.inf
+        nonzero = abs_y > 0.001
+        noise_floor = 20 * np.log10(np.percentile(abs_y[nonzero], 5)) if np.any(nonzero) else -np.inf
         dynamic_range = peak_db - noise_floor if noise_floor > -np.inf else 0
         return {
             "peak_db": round(float(peak_db), 2),

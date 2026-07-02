@@ -1,6 +1,6 @@
 import numpy as np
 import librosa
-from app.analyzers.context import AnalysisContext, true_runs
+from app.analyzers.context import AnalysisContext, adaptive_hop_length, true_runs
 
 
 class WaveformAnalyzer:
@@ -40,7 +40,7 @@ class WaveformAnalyzer:
 
     def _rms_envelope(self, y: np.ndarray, sr: int) -> dict:
         frame_length = 2048
-        hop = 512
+        hop = adaptive_hop_length(y, target_frames=6000, minimum=512)
         if self.context is not None:
             rms = self.context.rms(y, frame_length=frame_length, hop_length=hop)
         else:
@@ -66,7 +66,7 @@ class WaveformAnalyzer:
 
     def _detect_silence(self, y: np.ndarray, sr: int) -> list:
         frame_length = 2048
-        hop = 512
+        hop = adaptive_hop_length(y, target_frames=6000, minimum=512)
         if self.context is not None:
             rms = self.context.rms(y, frame_length=frame_length, hop_length=hop)
         else:

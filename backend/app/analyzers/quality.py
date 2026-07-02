@@ -111,6 +111,10 @@ class QualityAnalyzer:
     def _detect_clipping(self) -> dict:
         if self._clipping is not None:
             return self._clipping
+        if self.context is not None:
+            self._clipping = self.context.stats()["clipping"]
+            return self._clipping
+
         threshold = 0.999
         clip_mask = np.abs(self.y) >= threshold
         starts, _ends = true_runs(clip_mask, min_length=3)
@@ -123,6 +127,10 @@ class QualityAnalyzer:
     def _estimate_noise_floor(self) -> float:
         if self._noise_floor is not None:
             return self._noise_floor
+        if self.context is not None:
+            self._noise_floor = self.context.stats()["noise_floor_db"]
+            return self._noise_floor
+
         frame_length = 2048
         hop = 512
         if self.context is not None:
