@@ -155,16 +155,16 @@ export default function AudioInfo({ basicInfo }: AudioInfoProps) {
         {dsd?.is_dsd && (
           <div style={cardStyle()}>
             <div style={cardTitleStyle()}>DSD 信息</div>
-            {dsd.dsd_rate !== undefined && (
+            {dsd.dsd_rate != null && (
               <InfoRow label="DSD Rate" value={`DSD${dsd.dsd_rate}`} {...infoRowProps} />
             )}
-            {dsd.dsd_channels !== undefined && (
+            {dsd.dsd_channels != null && (
               <InfoRow label="DSD 声道" value={dsd.dsd_channels} {...infoRowProps} />
             )}
-            {dsd.sample_rate_hz !== undefined && (
+            {dsd.sample_rate_hz != null && (
               <InfoRow label="原始采样率" value={`${dsd.sample_rate_hz} Hz`} {...infoRowProps} />
             )}
-            {dsd.bits_per_sample !== undefined && (
+            {dsd.bits_per_sample != null && (
               <InfoRow label="原始位深" value={`${dsd.bits_per_sample} bit`} {...infoRowProps} />
             )}
           </div>

@@ -216,6 +216,16 @@ class BasicInfoAnalyzer:
 
     def _dff_info(self) -> dict:
         try:
+            sample_rate, channels = self._parse_dff_chunks()
+            if sample_rate or channels:
+                dsd_rate = sample_rate // 44100 if sample_rate else None
+                return {
+                    "dsd_rate": dsd_rate,
+                    "dsd_channels": channels,
+                    "sample_rate_hz": sample_rate,
+                    "bits_per_sample": 1,
+                    "is_dsd": True,
+                }
             mf = MutagenFile(str(self.metadata_path))
             if mf and mf.info:
                 sample_rate = getattr(mf.info, "sample_rate", None)
@@ -231,3 +241,46 @@ class BasicInfoAnalyzer:
         except Exception:
             pass
         return {"dsd_rate": None, "dsd_channels": None, "is_dsd": True}
+
+    def _parse_dff_chunks(self) -> tuple[Optional[int], Optional[int]]:
+        sample_rate = None
+        channels = None
+
+        def read_chunk_header(f):
+            chunk_id = f.read(4)
+            if len(chunk_id) < 4:
+                return None, None
+            size_bytes = f.read(8)
+            if len(size_bytes) < 8:
+                return None, None
+            return chunk_id, int.from_bytes(size_bytes, "big")
+
+        def scan_chunks(f, end):
+            nonlocal sample_rate, channels
+            while f.tell() + 12 <= end and (sample_rate is None or channels is None):
+                chunk_start = f.tell()
+                chunk_id, size = read_chunk_header(f)
+                if not chunk_id:
+                    break
+                data_start = f.tell()
+                data_end = min(data_start + size, end)
+
+                if chunk_id == b"FS  " and size >= 4:
+                    sample_rate = int.from_bytes(f.read(4), "big")
+                elif chunk_id == b"CHNL" and size >= 2:
+                    channels = int.from_bytes(f.read(2), "big")
+                elif chunk_id == b"PROP" and size >= 4:
+                    f.read(4)
+                    scan_chunks(f, data_end)
+
+                next_pos = chunk_start + 12 + size + (size % 2)
+                f.seek(min(next_pos, end))
+
+        with self.metadata_path.open("rb") as f:
+            chunk_id, size = read_chunk_header(f)
+            if chunk_id != b"FRM8" or not size:
+                return None, None
+            f.read(4)
+            scan_chunks(f, min(12 + size, self.metadata_path.stat().st_size))
+
+        return sample_rate, channels
