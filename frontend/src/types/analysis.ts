@@ -12,7 +12,7 @@ export interface AudioInfo {
   bit_depth: number
   channels: number
   channel_mode: string
-  bitrate_kbps?: number
+  bitrate_kbps?: number | null
   bitrate_mode: string
 }
 
@@ -30,6 +30,8 @@ export interface LoudnessInfo {
 export interface DsdInfo {
   dsd_rate?: number
   dsd_channels?: number
+  sample_rate_hz?: number
+  bits_per_sample?: number
   is_dsd: boolean
 }
 

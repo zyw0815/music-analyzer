@@ -79,7 +79,7 @@ def _analyze_saved_file(
 
     if job_id:
         _set_job(job_id, stage="basic", progress=25, message="读取基础信息")
-    basic_analyzer = BasicInfoAnalyzer(str(analysis_path), context)
+    basic_analyzer = BasicInfoAnalyzer(str(analysis_path), context, metadata_path=str(saved_path))
     basic_info = basic_analyzer.analyze()
     basic_info["file"]["name"] = display_filename
 
@@ -165,7 +165,7 @@ async def analyze_basic(file: UploadFile = File(...)):
     analysis_path = get_analysis_path(saved_path)
     context = AnalysisContext.from_file(str(analysis_path))
 
-    basic_analyzer = BasicInfoAnalyzer(str(analysis_path), context)
+    basic_analyzer = BasicInfoAnalyzer(str(analysis_path), context, metadata_path=str(saved_path))
     basic_info = basic_analyzer.analyze()
     basic_info = _apply_display_filename(basic_info, file)
 

@@ -65,8 +65,8 @@ function formatDuration(seconds: number): string {
   return `${min}:${String(sec).padStart(2, '0')}`
 }
 
-function formatBitrate(kbps: number | undefined): string {
-  return kbps !== undefined ? `${kbps} kbps` : 'N/A'
+function formatBitrate(kbps: number | null | undefined): string {
+  return kbps != null ? `${kbps} kbps` : 'N/A'
 }
 
 function cardStyle(): React.CSSProperties {
@@ -160,6 +160,12 @@ export default function AudioInfo({ basicInfo }: AudioInfoProps) {
             )}
             {dsd.dsd_channels !== undefined && (
               <InfoRow label="DSD 声道" value={dsd.dsd_channels} {...infoRowProps} />
+            )}
+            {dsd.sample_rate_hz !== undefined && (
+              <InfoRow label="原始采样率" value={`${dsd.sample_rate_hz} Hz`} {...infoRowProps} />
+            )}
+            {dsd.bits_per_sample !== undefined && (
+              <InfoRow label="原始位深" value={`${dsd.bits_per_sample} bit`} {...infoRowProps} />
             )}
           </div>
         )}

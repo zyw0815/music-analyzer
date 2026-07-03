@@ -8,10 +8,17 @@ from app.analyzers.context import AnalysisContext
 
 
 class BasicInfoAnalyzer:
-    def __init__(self, file_path: str, context: Optional[AnalysisContext] = None):
+    def __init__(
+        self,
+        file_path: str,
+        context: Optional[AnalysisContext] = None,
+        metadata_path: Optional[str] = None,
+    ):
         self.file_path = Path(file_path)
-        self.suffix = self.file_path.suffix.lower()
+        self.metadata_path = Path(metadata_path) if metadata_path else self.file_path
+        self.suffix = self.metadata_path.suffix.lower()
         self.context = context
+        self._dsd_cache = None
 
     def analyze(self) -> dict:
         return {
@@ -24,16 +31,16 @@ class BasicInfoAnalyzer:
         }
 
     def _file_info(self) -> dict:
-        size = self.file_path.stat().st_size
+        size = self.metadata_path.stat().st_size
         md5 = hashlib.md5()
-        with self.file_path.open("rb") as f:
+        with self.metadata_path.open("rb") as f:
             for chunk in iter(lambda: f.read(1024 * 1024), b""):
                 md5.update(chunk)
         fmt = self.suffix.lstrip(".").upper()
         if fmt == "M4A":
             fmt = "ALAC/AAC"
         return {
-            "name": self.file_path.name,
+            "name": self.metadata_path.name,
             "size_bytes": size,
             "format": fmt,
             "encoder": self._get_encoder(),
@@ -42,7 +49,7 @@ class BasicInfoAnalyzer:
 
     def _get_encoder(self) -> Optional[str]:
         try:
-            mf = MutagenFile(str(self.file_path))
+            mf = MutagenFile(str(self.metadata_path))
             if mf and mf.info:
                 return getattr(mf.info, "encoder", None) or getattr(mf.info, "encoder_info", None)
         except Exception:
@@ -50,6 +57,29 @@ class BasicInfoAnalyzer:
         return None
 
     def _audio_info(self) -> dict:
+        dsd_info = self._dsd_info()
+        if dsd_info:
+            channels = dsd_info.get("dsd_channels")
+            if channels is None and self.context is not None:
+                channels = 1 if self.context.y_stereo.ndim == 1 else self.context.y_stereo.shape[0]
+            channels = channels or 1
+            channel_mode = "mono" if channels == 1 else "stereo"
+            if channels > 2:
+                channel_mode = f"{channels}ch"
+            duration = self._metadata_duration_seconds()
+            bitrate = None
+            if duration and duration > 0:
+                bitrate = round(self.metadata_path.stat().st_size * 8 / duration / 1000)
+            return {
+                "codec": self.suffix.lstrip(".").upper(),
+                "sample_rate_hz": dsd_info.get("sample_rate_hz") or (self.context.sr if self.context else 0),
+                "bit_depth": dsd_info.get("bits_per_sample") or 1,
+                "channels": channels,
+                "channel_mode": channel_mode,
+                "bitrate_kbps": bitrate,
+                "bitrate_mode": "CBR",
+            }
+
         if self.context is not None:
             y = self.context.y_stereo
             sr = self.context.sr
@@ -65,7 +95,7 @@ class BasicInfoAnalyzer:
         if channels > 2:
             channel_mode = f"{channels}ch"
 
-        mutagen_file = MutagenFile(str(self.file_path))
+        mutagen_file = MutagenFile(str(self.metadata_path))
         bitrate = None
         bitrate_mode = None
         if mutagen_file and mutagen_file.info:
@@ -101,7 +131,7 @@ class BasicInfoAnalyzer:
 
     def _metadata_duration_seconds(self) -> Optional[float]:
         try:
-            mf = MutagenFile(str(self.file_path))
+            mf = MutagenFile(str(self.metadata_path))
             if mf and mf.info:
                 length = getattr(mf.info, "length", None)
                 if length and length > 0:
@@ -137,7 +167,7 @@ class BasicInfoAnalyzer:
     def _tags_info(self) -> dict:
         tags = {}
         try:
-            mf = MutagenFile(str(self.file_path))
+            mf = MutagenFile(str(self.metadata_path))
             if mf:
                 tag_map = {"title": None, "artist": None, "album": None, "year": None, "genre": None, "track": None}
                 for key in tag_map:
@@ -152,21 +182,52 @@ class BasicInfoAnalyzer:
         return tags
 
     def _dsd_info(self) -> Optional[dict]:
+        if self._dsd_cache is not None:
+            return self._dsd_cache
         if self.suffix not in {".dsf", ".dff"}:
             return None
+        if self.suffix == ".dff":
+            self._dsd_cache = self._dff_info()
+            return self._dsd_cache
+
+        self._dsd_cache = self._dsf_info()
+        return self._dsd_cache
+
+    def _dsf_info(self) -> dict:
         try:
-            with open(self.file_path, "rb") as f:
-                header = f.read(4)
-                if header == b"DSD ":
-                    f.read(8)
-                    f.read(4)
-                    f.read(4)
-                    ch_bytes = f.read(4)
-                    channels = int.from_bytes(ch_bytes, "little")
-                    sr_bytes = f.read(4)
-                    sample_rate = int.from_bytes(sr_bytes, "little")
-                    dsd_rate = sample_rate // 44100 if sample_rate > 0 else 0
-                    return {"dsd_rate": dsd_rate, "dsd_channels": channels, "is_dsd": True}
+            data = self.metadata_path.read_bytes()
+            fmt_offset = data.find(b"fmt ")
+            if fmt_offset >= 0 and len(data) >= fmt_offset + 52:
+                base = fmt_offset + 12
+                channels = int.from_bytes(data[base + 12:base + 16], "little")
+                sample_rate = int.from_bytes(data[base + 16:base + 20], "little")
+                bits_per_sample = int.from_bytes(data[base + 20:base + 24], "little")
+                dsd_rate = sample_rate // 44100 if sample_rate > 0 else None
+                return {
+                    "dsd_rate": dsd_rate,
+                    "dsd_channels": channels,
+                    "sample_rate_hz": sample_rate,
+                    "bits_per_sample": bits_per_sample or 1,
+                    "is_dsd": True,
+                }
+        except Exception:
+            pass
+        return {"dsd_rate": None, "dsd_channels": None, "is_dsd": True}
+
+    def _dff_info(self) -> dict:
+        try:
+            mf = MutagenFile(str(self.metadata_path))
+            if mf and mf.info:
+                sample_rate = getattr(mf.info, "sample_rate", None)
+                channels = getattr(mf.info, "channels", None)
+                dsd_rate = sample_rate // 44100 if sample_rate else None
+                return {
+                    "dsd_rate": dsd_rate,
+                    "dsd_channels": channels,
+                    "sample_rate_hz": sample_rate,
+                    "bits_per_sample": 1,
+                    "is_dsd": True,
+                }
         except Exception:
             pass
         return {"dsd_rate": None, "dsd_channels": None, "is_dsd": True}
