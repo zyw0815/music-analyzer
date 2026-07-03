@@ -1,5 +1,6 @@
-import ReactECharts from 'echarts-for-react'
+import ResponsiveChart from '../ResponsiveChart'
 import type { FrequencyDistribution } from '../../types/analysis'
+import { cssVar } from '../../theme/cssVars'
 
 interface FrequencyDistributionProps {
   distribution: FrequencyDistribution
@@ -10,20 +11,30 @@ const BAND_COLORS = ['#0c1445', '#2563eb', '#58a6ff', '#f59e0b', '#e6edf3']
 export default function FrequencyDistributionChart({ distribution }: FrequencyDistributionProps) {
   if (!distribution || !distribution.bands || !distribution.energy_db) {
     console.error('FrequencyDistribution: invalid data', distribution)
-    return <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d', color: '#f85149' }}>
+    return <div className="surface rounded-lg p-5" style={{ color: 'var(--danger)' }}>
       频率分布数据加载失败
     </div>
   }
 
+  const text = cssVar('--text', '#edf3fb')
+  const muted = cssVar('--text-muted', '#98a6b8')
+  const border = cssVar('--border', '#2a3545')
+  const grid = cssVar('--chart-grid', '#223044')
+  const tooltip = cssVar('--chart-tooltip', '#151d28')
+  const minDb = -80
+  const displayValues = distribution.energy_db.map((value) => Math.max(0, Math.min(80, value - minDb)))
+
   const option = {
     tooltip: {
       trigger: 'axis' as const,
-      backgroundColor: '#1c2128',
-      borderColor: '#30363d',
-      textStyle: { color: '#e6edf3', fontSize: 12 },
+      backgroundColor: tooltip,
+      borderColor: border,
+      textStyle: { color: text, fontSize: 12 },
       formatter: (params: Array<{ name: string; value: number; marker: string }>) => {
         const p = params[0]
-        return `${p.marker} ${p.name}<br/>能量: ${p.value.toFixed(1)} dB`
+        const index = distribution.bands.indexOf(p.name)
+        const db = distribution.energy_db[index] ?? minDb
+        return `${p.marker} ${p.name}<br/>能量: ${db.toFixed(1)} dB`
       },
     },
     grid: {
@@ -35,21 +46,26 @@ export default function FrequencyDistributionChart({ distribution }: FrequencyDi
     xAxis: {
       type: 'category' as const,
       data: distribution.bands,
-      axisLabel: { color: '#8b949e', fontSize: 11 },
-      axisLine: { lineStyle: { color: '#30363d' } },
+      axisLabel: { color: muted, fontSize: 11 },
+      axisLine: { lineStyle: { color: border } },
     },
     yAxis: {
       type: 'value' as const,
-      name: '能量 (dB)',
-      nameTextStyle: { color: '#8b949e' },
-      axisLabel: { color: '#8b949e' },
-      axisLine: { lineStyle: { color: '#30363d' } },
-      splitLine: { lineStyle: { color: '#21262d' } },
+      name: '相对强度',
+      min: 0,
+      max: 80,
+      nameTextStyle: { color: muted },
+      axisLabel: {
+        color: muted,
+        formatter: (value: number) => `${value + minDb}`,
+      },
+      axisLine: { lineStyle: { color: border } },
+      splitLine: { lineStyle: { color: grid } },
     },
     series: [
       {
         type: 'bar',
-        data: distribution.energy_db.map((val, i) => ({
+        data: displayValues.map((val, i) => ({
           value: val,
           itemStyle: { color: BAND_COLORS[i % BAND_COLORS.length] },
         })),
@@ -57,18 +73,21 @@ export default function FrequencyDistributionChart({ distribution }: FrequencyDi
         label: {
           show: true,
           position: 'top' as const,
-          color: '#8b949e',
+          color: muted,
           fontSize: 11,
-          formatter: (p: { value: number }) => `${p.value.toFixed(1)}`,
+          formatter: (p: { dataIndex: number }) => `${distribution.energy_db[p.dataIndex].toFixed(1)}`,
         },
       },
     ],
   }
 
   return (
-    <div className="rounded-lg p-5" style={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}>
-      <h3 className="text-base font-semibold mb-3" style={{ color: '#e6edf3' }}>频率分布</h3>
-      <ReactECharts option={option} style={{ width: '100%', height: 280 }} />
+    <div className="surface rounded-lg p-5">
+      <h3 className="text-base font-semibold mb-1" style={{ color: 'var(--text)' }}>频率分布</h3>
+      <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>
+        5 个频段的能量分布：<strong>20-60Hz</strong> 超低音（震感）、<strong>60-250Hz</strong> 低音（贝斯/鼓）、<strong>250-2kHz</strong> 中音（人声/乐器）、<strong>2k-6kHz</strong> 中高音（清晰度）、<strong>6k-20kHz</strong> 高音（空气感/细节）。
+      </p>
+      <ResponsiveChart option={option} height={280} />
     </div>
   )
 }

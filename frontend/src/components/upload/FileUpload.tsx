@@ -3,7 +3,7 @@ import { analyzeFile } from '../../api/client'
 import type { FullAnalysisResponse } from '../../types/analysis'
 
 const ACCEPTED = '.mp3,.wav,.flac,.aac,.ogg,.aiff,.wma,.m4a,.ape,.dsf,.dff,.opus'
-const MAX_SIZE_MB = 500
+const MAX_SIZE_GB = 5
 
 interface FileUploadProps {
   onUploadComplete: (data: FullAnalysisResponse) => void
@@ -14,12 +14,14 @@ export default function FileUpload({ onUploadComplete, onError }: FileUploadProp
   const [dragOver, setDragOver] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [progress, setProgress] = useState(0)
+  const [phase, setPhase] = useState<'idle' | 'uploading' | 'analyzing'>('idle')
+  const [statusText, setStatusText] = useState('')
   const [uploading, setUploading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   function validateFile(file: File): string | null {
-    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-      return `文件大小超过限制（最大 ${MAX_SIZE_MB}MB）`
+    if (file.size > MAX_SIZE_GB * 1024 * 1024 * 1024) {
+      return `文件大小超过限制（最大 ${MAX_SIZE_GB}GB）`
     }
     const ext = '.' + file.name.split('.').pop()?.toLowerCase()
     if (!ACCEPTED.split(',').includes(ext)) {
@@ -37,14 +39,25 @@ export default function FileUpload({ onUploadComplete, onError }: FileUploadProp
     setSelectedFile(file)
     setUploading(true)
     setProgress(0)
+    setPhase('uploading')
+    setStatusText('上传中...')
     try {
-      const data = await analyzeFile(file, setProgress)
+      const data = await analyzeFile(file, (percent) => {
+        setProgress(percent)
+        setStatusText(`上传中... ${percent}%`)
+      }, (status) => {
+        setPhase('analyzing')
+        setProgress(status.progress)
+        setStatusText(status.message || '后端分析中...')
+      })
       onUploadComplete(data)
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : '上传失败，请重试'
       onError(msg)
     } finally {
       setUploading(false)
+      setPhase('idle')
+      setStatusText('')
     }
   }
 
@@ -71,7 +84,7 @@ export default function FileUpload({ onUploadComplete, onError }: FileUploadProp
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-full">
+    <div className="flex flex-col items-center justify-center h-full w-full">
       <input
         ref={inputRef}
         type="file"
@@ -84,43 +97,49 @@ export default function FileUpload({ onUploadComplete, onError }: FileUploadProp
         onDrop={onDrop}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
-        className="flex flex-col items-center justify-center w-full max-w-lg cursor-pointer rounded-lg transition-colors"
+        className="surface flex flex-col items-center justify-center w-full max-w-xl cursor-pointer rounded-lg transition-colors"
         style={{
-          border: `2px dashed ${dragOver ? '#e94560' : '#30363d'}`,
-          backgroundColor: dragOver ? 'rgba(233,69,96,0.05)' : '#161b22',
+          border: `2px dashed ${dragOver ? 'var(--accent-strong)' : 'var(--border)'}`,
+          backgroundColor: dragOver ? 'var(--accent-soft)' : 'var(--bg-panel)',
           padding: '48px 24px',
         }}
       >
-        <div className="text-4xl mb-3" style={{ color: dragOver ? '#e94560' : '#8b949e' }}>
+        <div
+          className="flex h-16 w-16 items-center justify-center rounded-full text-4xl mb-4"
+          style={{
+            color: dragOver ? 'var(--accent-strong)' : 'var(--accent)',
+            backgroundColor: 'var(--bg-muted)',
+          }}
+        >
           ↑
         </div>
-        <div className="text-sm font-medium mb-1" style={{ color: '#e6edf3' }}>
+        <div className="text-base font-semibold mb-1" style={{ color: 'var(--text)' }}>
           拖拽音频文件到此处，或点击选择
         </div>
-        <div className="text-xs" style={{ color: '#8b949e' }}>
+        <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
           支持 MP3, WAV, FLAC, AAC, OGG, AIFF 等格式
         </div>
       </div>
 
       {selectedFile && (
-        <div className="mt-4 w-full max-w-lg">
-          <div className="flex items-center justify-between text-sm mb-2" style={{ color: '#e6edf3' }}>
+        <div className="mt-4 w-full max-w-xl">
+          <div className="flex items-center justify-between text-sm mb-2" style={{ color: 'var(--text)' }}>
             <span className="truncate mr-2">{selectedFile.name}</span>
-            <span style={{ color: '#8b949e' }}>
+            <span style={{ color: 'var(--text-muted)' }}>
               {(selectedFile.size / (1024 * 1024)).toFixed(1)} MB
             </span>
           </div>
           {uploading && (
-            <div className="w-full h-2 rounded-full overflow-hidden" style={{ backgroundColor: '#30363d' }}>
+            <div className="meter-track w-full h-2 rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-300"
-                style={{ width: `${progress}%`, backgroundColor: '#e94560' }}
+                style={{ width: `${Math.max(progress, phase === 'uploading' ? 2 : 0)}%`, backgroundColor: 'var(--accent-strong)' }}
               />
             </div>
           )}
           {uploading && (
-            <div className="text-xs mt-1" style={{ color: '#8b949e' }}>
-              分析中... {progress}%
+            <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+              {statusText || '处理中...'}
             </div>
           )}
         </div>

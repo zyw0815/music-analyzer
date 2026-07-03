@@ -45,6 +45,8 @@ class TagsInfo(BaseModel):
 class DsdInfo(BaseModel):
     dsd_rate: Optional[int] = None
     dsd_channels: Optional[int] = None
+    sample_rate_hz: Optional[int] = None
+    bits_per_sample: Optional[int] = None
     is_dsd: bool = True
 
 

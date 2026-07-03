@@ -1,13 +1,18 @@
 import numpy as np
 import librosa
+from app.analyzers.context import AnalysisContext, adaptive_hop_length
 
 
 class SpectrumAnalyzer:
-    def __init__(self, file_path: str):
+    def __init__(self, file_path: str, context: AnalysisContext | None = None):
         self.file_path = file_path
+        self.context = context
 
     def analyze(self) -> dict:
-        y, sr = librosa.load(self.file_path, sr=None, mono=True)
+        if self.context is not None:
+            y, sr = self.context.mono, self.context.sr
+        else:
+            y, sr = librosa.load(self.file_path, sr=None, mono=True)
         return {
             "spectrum": self._spectrum(y, sr),
             "spectrogram": self._spectrogram(y, sr),
@@ -16,29 +21,31 @@ class SpectrumAnalyzer:
 
     def _spectrum(self, y: np.ndarray, sr: int) -> dict:
         n_fft = 4096
-        S = np.abs(librosa.stft(y, n_fft=n_fft))
+        hop = adaptive_hop_length(y, target_frames=1200, minimum=n_fft // 4)
+        if self.context is not None:
+            S = self.context.stft(y, n_fft=n_fft, hop_length=hop)
+        else:
+            S = np.abs(librosa.stft(y, n_fft=n_fft, hop_length=hop))
         mag = np.mean(S, axis=1)
-        mag_db = 20 * np.log10(mag + 1e-10)
+        mag_db = librosa.amplitude_to_db(mag, ref=np.max)
         peak_hold = np.max(S, axis=1)
-        peak_hold_db = 20 * np.log10(peak_hold + 1e-10)
+        peak_hold_db = librosa.amplitude_to_db(peak_hold, ref=np.max)
         freqs = librosa.fft_frequencies(sr=sr, n_fft=n_fft)
         return {
             "frequencies": freqs.tolist(),
-            "magnitude_db": mag_db.tolist(),
-            "peak_hold_db": peak_hold_db.tolist(),
+            "magnitude_db": np.round(mag_db, 2).tolist(),
+            "peak_hold_db": np.round(peak_hold_db, 2).tolist(),
         }
 
     def _spectrogram(self, y: np.ndarray, sr: int) -> dict:
         n_fft = 2048
-        hop = 512
-        S = np.abs(librosa.stft(y, n_fft=n_fft, hop_length=hop))
+        hop = adaptive_hop_length(y, target_frames=500, minimum=512)
+        if self.context is not None:
+            S = self.context.stft(y, n_fft=n_fft, hop_length=hop, cache=False)
+        else:
+            S = np.abs(librosa.stft(y, n_fft=n_fft, hop_length=hop))
         S_db = librosa.amplitude_to_db(S, ref=np.max)
         freqs = librosa.fft_frequencies(sr=sr, n_fft=n_fft)
-        # Downsample to ~500 time steps
-        n_times = S_db.shape[1]
-        if n_times > 500:
-            indices = np.linspace(0, n_times - 1, 500, dtype=int)
-            S_db = S_db[:, indices]
         return {
             "frequencies": freqs.tolist(),
             "times": np.linspace(0, len(y) / sr, S_db.shape[1]).tolist(),
@@ -53,17 +60,29 @@ class SpectrumAnalyzer:
             ("2k-6kHz", 2000, 6000),
             ("6k-20kHz", 6000, 20000),
         ]
-        n_fft = 4096
-        S = np.abs(librosa.stft(y, n_fft=n_fft))
+        n_fft = self._band_n_fft(sr)
+        hop = adaptive_hop_length(y, target_frames=1200, minimum=n_fft // 4)
+        if self.context is not None:
+            S = self.context.stft(y, n_fft=n_fft, hop_length=hop)
+        else:
+            S = np.abs(librosa.stft(y, n_fft=n_fft, hop_length=hop))
         mag = np.mean(S, axis=1)
         freqs = librosa.fft_frequencies(sr=sr, n_fft=n_fft)
-        total_energy = np.sum(mag ** 2)
+        ref = np.max(mag) if np.max(mag) > 0 else 1.0
         band_names = []
         energies = []
         for name, low, high in bands_def:
             mask = (freqs >= low) & (freqs < high)
-            energy = np.sum(mag[mask] ** 2) if np.any(mask) else 0
-            energy_db = 10 * np.log10(energy / total_energy + 1e-10) if total_energy > 0 else -np.inf
+            if np.any(mask):
+                band_mag = np.mean(mag[mask])
+                energy_db = float(librosa.amplitude_to_db(np.array([band_mag]), ref=ref)[0])
+            else:
+                energy_db = -80.0
             band_names.append(name)
-            energies.append(round(float(energy_db), 2))
+            energies.append(round(energy_db, 1))
         return {"bands": band_names, "energy_db": energies}
+
+    def _band_n_fft(self, sr: int) -> int:
+        target_resolution_hz = 5
+        n_fft = 1 << int(np.ceil(np.log2(sr / target_resolution_hz)))
+        return int(np.clip(n_fft, 4096, 32768))

@@ -1,13 +1,18 @@
 import numpy as np
 import librosa
+from app.analyzers.context import AnalysisContext, adaptive_hop_length
 
 
 class ChannelAnalyzer:
-    def __init__(self, file_path: str):
+    def __init__(self, file_path: str, context: AnalysisContext | None = None):
         self.file_path = file_path
+        self.context = context
 
     def analyze(self) -> dict:
-        y_stereo, sr = librosa.load(self.file_path, sr=None, mono=False)
+        if self.context is not None:
+            y_stereo, sr = self.context.y_stereo, self.context.sr
+        else:
+            y_stereo, sr = librosa.load(self.file_path, sr=None, mono=False)
         if y_stereo.ndim == 1:
             # Mono file
             return self._mono_result(y_stereo, sr)
@@ -54,11 +59,15 @@ class ChannelAnalyzer:
 
     def _compute_spectrum(self, y: np.ndarray, sr: int) -> dict:
         n_fft = 4096
-        S = np.abs(librosa.stft(y, n_fft=n_fft))
+        hop = adaptive_hop_length(y, target_frames=600, minimum=n_fft // 4)
+        if self.context is not None:
+            S = self.context.stft(y, n_fft=n_fft, hop_length=hop, cache=False)
+        else:
+            S = np.abs(librosa.stft(y, n_fft=n_fft, hop_length=hop))
         mag = np.mean(S, axis=1)
-        mag_db = 20 * np.log10(mag + 1e-10)
+        mag_db = librosa.amplitude_to_db(mag, ref=np.max)
         freqs = librosa.fft_frequencies(sr=sr, n_fft=n_fft)
         return {
             "frequencies": freqs.tolist(),
-            "magnitude_db": mag_db.tolist(),
+            "magnitude_db": np.round(mag_db, 2).tolist(),
         }

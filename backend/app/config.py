@@ -13,7 +13,8 @@ SUPPORTED_FORMATS = {
 AUDIO_EXTENSIONS = {".mp3", ".wav", ".flac", ".aac", ".ogg", ".oga", ".opus",
                     ".aiff", ".aif", ".wma", ".m4a", ".ape", ".dsf", ".dff"}
 
-TMP_DIR = Path(os.environ.get("ANALYZER_TMP_DIR", "backend/tmp"))
+BACKEND_DIR = Path(__file__).resolve().parents[1]
+TMP_DIR = Path(os.environ.get("ANALYZER_TMP_DIR", BACKEND_DIR / "tmp"))
 TMP_DIR.mkdir(parents=True, exist_ok=True)
 
-VERSION = "1.0.0"
+VERSION = "2.0.1"

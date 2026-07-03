@@ -22,12 +22,18 @@ frontend/dist/
 
 # OS
 .DS_Store
+._*
+.AppleDouble
+.LSOverride
 Thumbs.db
 
-# Claude AI
-.claude
+# AI assistant local files
+.claude/
+.codex/
+.agents/
 claude_desktop_config.json
 CLAUDE.md
+CODEX.md
 
 # Temp audio files
 backend/tmp/

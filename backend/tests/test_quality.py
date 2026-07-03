@@ -49,3 +49,13 @@ class TestQualityAnalyzer:
         result = QualityAnalyzer(str(sample_wav_stereo), info).analyze()
         for key, val in result["details"].items():
             assert isinstance(val, str), f"detail for {key} should be string"
+
+    def test_dsd_formats_score_as_lossless(self, sample_wav_stereo):
+        from app.analyzers.basic_info import BasicInfoAnalyzer
+        info = BasicInfoAnalyzer(str(sample_wav_stereo)).analyze()
+        info["audio"]["codec"] = "DFF"
+        info["audio"]["bitrate_kbps"] = None
+
+        result = QualityAnalyzer(str(sample_wav_stereo), info).analyze()
+
+        assert result["sub_scores"]["bitrate"] == 100

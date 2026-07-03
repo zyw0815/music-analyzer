@@ -12,7 +12,7 @@ def fixtures_dir():
 
 @pytest.fixture
 def tmp_dir():
-    d = Path("backend/tmp/test")
+    d = Path(__file__).resolve().parents[1] / "tmp" / "test"
     d.mkdir(parents=True, exist_ok=True)
     return d
 
