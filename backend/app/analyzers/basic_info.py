@@ -67,6 +67,8 @@ class BasicInfoAnalyzer:
             if channels > 2:
                 channel_mode = f"{channels}ch"
             duration = self._metadata_duration_seconds()
+            if duration is None and self.context is not None and self.context.sr > 0:
+                duration = len(self.context.mono) / self.context.sr
             bitrate = None
             if duration and duration > 0:
                 bitrate = round(self.metadata_path.stat().st_size * 8 / duration / 1000)

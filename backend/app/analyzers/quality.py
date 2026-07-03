@@ -48,7 +48,7 @@ class QualityAnalyzer:
     def _score_bitrate(self) -> int:
         audio = self.info.get("audio", {})
         codec = audio.get("codec", "").upper()
-        if codec in {"FLAC", "WAV", "AIFF", "APE", "ALAC/AAC"}:
+        if codec in {"FLAC", "WAV", "AIFF", "APE", "ALAC/AAC", "DSF", "DFF"}:
             return 100
         br = audio.get("bitrate_kbps") or 0
         return max(0, min(100, round((br - 64) / (320 - 64) * 100)))

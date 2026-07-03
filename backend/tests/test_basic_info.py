@@ -106,5 +106,6 @@ class TestBasicInfo:
         assert result["audio"]["sample_rate_hz"] == 2822400
         assert result["audio"]["bit_depth"] == 1
         assert result["audio"]["channels"] == 2
+        assert result["audio"]["bitrate_kbps"] is not None
         assert result["dsd"]["dsd_rate"] == 64
         assert result["dsd"]["dsd_channels"] == 2
